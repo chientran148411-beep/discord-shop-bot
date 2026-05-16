@@ -7,16 +7,25 @@ const {
   ButtonStyle
 } = require("discord.js");
 
+const Product =
+require("../models/Product");
+
 const Category =
 require("../models/Category");
+
+const Key =
+require("../models/Key");
+
+const Order =
+require("../models/Order");
 
 module.exports = async (
   interaction
 ) => {
 
-  // =====================
+  // ======================
   // ADD CATEGORY
-  // =====================
+  // ======================
 
   if (
     interaction.customId ===
@@ -47,16 +56,15 @@ module.exports = async (
 
     .setStyle(
       TextInputStyle.Short
-    )
+    );
 
-    .setRequired(true);
+    modal.addComponents(
 
-    const row =
-    new ActionRowBuilder()
+      new ActionRowBuilder()
 
-    .addComponents(input);
+      .addComponents(input)
 
-    modal.addComponents(row);
+    );
 
     return interaction.showModal(
       modal
@@ -64,9 +72,9 @@ module.exports = async (
 
   }
 
-  // =====================
+  // ======================
   // DELETE CATEGORY
-  // =====================
+  // ======================
 
   if (
     interaction.customId ===
@@ -97,7 +105,7 @@ module.exports = async (
       new ButtonBuilder()
 
       .setCustomId(
-        `delete_${cat._id}`
+        `delete_category_${cat._id}`
       )
 
       .setLabel(cat.name)
@@ -141,28 +149,340 @@ module.exports = async (
 
   }
 
-  // =====================
-  // OPEN CATEGORY
-  // =====================
+  // ======================
+  // ADD PRODUCT
+  // ======================
 
   if (
-    interaction.customId.startsWith(
-      "category_"
-    )
+    interaction.customId ===
+    "add_product"
   ) {
 
-    const id =
-    interaction.customId.split("_")[1];
+    const modal =
+    new ModalBuilder()
+
+    .setCustomId(
+      "add_product_modal"
+    )
+
+    .setTitle(
+      "📦 Thêm Sản Phẩm"
+    );
 
     const category =
-    await Category.findById(id);
+    new TextInputBuilder()
 
-    if (!category) {
+    .setCustomId(
+      "product_category"
+    )
+
+    .setLabel(
+      "Danh mục"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    const name =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "product_name"
+    )
+
+    .setLabel(
+      "Tên sản phẩm"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    const duration =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "product_duration"
+    )
+
+    .setLabel(
+      "Thời gian"
+    )
+
+    .setPlaceholder(
+      "30 ngày"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    const price =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "product_price"
+    )
+
+    .setLabel(
+      "Giá sản phẩm"
+    )
+
+    .setPlaceholder(
+      "50000"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    modal.addComponents(
+
+      new ActionRowBuilder()
+      .addComponents(category),
+
+      new ActionRowBuilder()
+      .addComponents(name),
+
+      new ActionRowBuilder()
+      .addComponents(duration),
+
+      new ActionRowBuilder()
+      .addComponents(price)
+
+    );
+
+    return interaction.showModal(
+      modal
+    );
+
+  }
+
+  // ======================
+  // EDIT PRICE
+  // ======================
+
+  if (
+    interaction.customId ===
+    "edit_price"
+  ) {
+
+    const modal =
+    new ModalBuilder()
+
+    .setCustomId(
+      "edit_price_modal"
+    )
+
+    .setTitle(
+      "💰 Sửa Giá"
+    );
+
+    const product =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "product_name"
+    )
+
+    .setLabel(
+      "Tên sản phẩm"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    const price =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "new_price"
+    )
+
+    .setLabel(
+      "Giá mới"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    modal.addComponents(
+
+      new ActionRowBuilder()
+      .addComponents(product),
+
+      new ActionRowBuilder()
+      .addComponents(price)
+
+    );
+
+    return interaction.showModal(
+      modal
+    );
+
+  }
+
+  // ======================
+  // EDIT DURATION
+  // ======================
+
+  if (
+    interaction.customId ===
+    "edit_duration"
+  ) {
+
+    const modal =
+    new ModalBuilder()
+
+    .setCustomId(
+      "edit_duration_modal"
+    )
+
+    .setTitle(
+      "⏰ Sửa Thời Gian"
+    );
+
+    const product =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "product_name"
+    )
+
+    .setLabel(
+      "Tên sản phẩm"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    const duration =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "new_duration"
+    )
+
+    .setLabel(
+      "Thời gian mới"
+    )
+
+    .setPlaceholder(
+      "60 ngày"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    modal.addComponents(
+
+      new ActionRowBuilder()
+      .addComponents(product),
+
+      new ActionRowBuilder()
+      .addComponents(duration)
+
+    );
+
+    return interaction.showModal(
+      modal
+    );
+
+  }
+
+  // ======================
+  // ADD KEY
+  // ======================
+
+  if (
+    interaction.customId ===
+    "add_key"
+  ) {
+
+    const modal =
+    new ModalBuilder()
+
+    .setCustomId(
+      "add_key_modal"
+    )
+
+    .setTitle(
+      "🔑 Nhập Key"
+    );
+
+    const product =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "product_name"
+    )
+
+    .setLabel(
+      "Tên sản phẩm"
+    )
+
+    .setStyle(
+      TextInputStyle.Short
+    );
+
+    const key =
+    new TextInputBuilder()
+
+    .setCustomId(
+      "product_key"
+    )
+
+    .setLabel(
+      "Key"
+    )
+
+    .setStyle(
+      TextInputStyle.Paragraph
+    );
+
+    modal.addComponents(
+
+      new ActionRowBuilder()
+      .addComponents(product),
+
+      new ActionRowBuilder()
+      .addComponents(key)
+
+    );
+
+    return interaction.showModal(
+      modal
+    );
+
+  }
+
+  // ======================
+  // VIEW KEYS
+  // ======================
+
+  if (
+    interaction.customId ===
+    "view_keys"
+  ) {
+
+    const keys =
+    await Key.find({
+      sold: false
+    });
+
+    if (
+      keys.length === 0
+    ) {
 
       return interaction.reply({
 
         content:
-        "❌ Không tìm thấy",
+        "❌ Không có key",
 
         ephemeral: true
 
@@ -170,10 +490,29 @@ module.exports = async (
 
     }
 
+    let text = "";
+
+    for (
+      const key of keys
+    ) {
+
+      const product =
+      await Product.findById(
+        key.productId
+      );
+
+      text += `
+
+📦 ${product?.name}
+🔑 ${key.key}
+
+`;
+
+    }
+
     return interaction.reply({
 
-      content:
-      `📂 Bạn đã chọn ${category.name}`,
+      content: text,
 
       ephemeral: true
 
@@ -181,47 +520,105 @@ module.exports = async (
 
   }
 
-  // =====================
-  // DELETE SELECTED
-  // =====================
+  // ======================
+  // STOCK
+  // ======================
 
   if (
-    interaction.customId.startsWith(
-      "delete_"
-    )
+    interaction.customId ===
+    "stock"
   ) {
 
-    const id =
-    interaction.customId.split("_")[1];
+    const products =
+    await Product.find();
 
-    await Category.findByIdAndDelete(
-      id
-    );
+    let text = "";
 
-    return interaction.update({
+    for (
+      const product of products
+    ) {
 
-      content:
-      "✅ Đã xóa danh mục",
+      const stock =
+      await Key.countDocuments({
 
-      components: []
+        productId:
+        product._id,
+
+        sold: false
+
+      });
+
+      text += `
+
+📦 ${product.name}
+⏰ ${product.duration}
+💰 ${product.price}đ
+📊 Kho: ${stock}
+
+`;
+
+    }
+
+    return interaction.reply({
+
+      content: text,
+
+      ephemeral: true
 
     });
 
   }
 
-  // =====================
+  // ======================
   // BUYERS
-  // =====================
+  // ======================
 
   if (
     interaction.customId ===
     "buyers"
   ) {
 
+    const orders =
+    await Order.find();
+
+    if (
+      orders.length === 0
+    ) {
+
+      return interaction.reply({
+
+        content:
+        "❌ Chưa có người mua",
+
+        ephemeral: true
+
+      });
+
+    }
+
+    let text = "";
+
+    for (
+      const order of orders
+    ) {
+
+      const product =
+      await Product.findById(
+        order.productId
+      );
+
+      text += `
+
+👤 ${order.userId}
+📦 ${product?.name}
+
+`;
+
+    }
+
     return interaction.reply({
 
-      content:
-      "👤 Chưa có người mua",
+      content: text,
 
       ephemeral: true
 
@@ -229,19 +626,35 @@ module.exports = async (
 
   }
 
-  // =====================
+  // ======================
   // SOLD PRODUCTS
-  // =====================
+  // ======================
 
   if (
     interaction.customId ===
     "sold_products"
   ) {
 
+    const products =
+    await Product.find();
+
+    let text = "";
+
+    products.forEach(p => {
+
+      text += `
+
+📦 ${p.name}
+🛒 Đã bán:
+${p.sold}
+
+`;
+
+    });
+
     return interaction.reply({
 
-      content:
-      "📦 Chưa có sản phẩm bán",
+      content: text,
 
       ephemeral: true
 
