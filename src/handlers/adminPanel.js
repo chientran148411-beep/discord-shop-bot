@@ -13,7 +13,8 @@ client.on(
 "interactionCreate",
 async interaction => {
 
-if (!interaction.isButton()) return;
+if (!interaction.isButton())
+return;
 
 // =====================
 // ADD PRODUCT
@@ -32,7 +33,7 @@ new ModalBuilder()
 )
 
 .setTitle(
-"📦 Thêm Sản Phẩm"
+"📦 Thêm sản phẩm"
 );
 
 const category =
@@ -105,17 +106,27 @@ TextInputStyle.Short
 
 modal.addComponents(
 
-new ActionRowBuilder().addComponents(category),
+new ActionRowBuilder()
 
-new ActionRowBuilder().addComponents(product),
+.addComponents(category),
 
-new ActionRowBuilder().addComponents(duration),
+new ActionRowBuilder()
 
-new ActionRowBuilder().addComponents(price)
+.addComponents(product),
+
+new ActionRowBuilder()
+
+.addComponents(duration),
+
+new ActionRowBuilder()
+
+.addComponents(price)
 
 );
 
-await interaction.showModal(modal);
+await interaction.showModal(
+modal
+);
 
 }
 
