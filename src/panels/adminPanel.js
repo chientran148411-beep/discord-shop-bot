@@ -28,18 +28,36 @@ module.exports = async (
   const embed =
   new EmbedBuilder()
 
-  .setColor("Purple")
+  .setColor("#8e44ad")
 
   .setTitle(
     "⚙️ ADMIN PANEL"
   )
 
   .setDescription(`
-📦 Quản lý sản phẩm
-🔑 Quản lý tài khoản
-📂 Quản lý danh mục
-📊 Thống kê hệ thống
+
+📦 Sản phẩm:
+• Thêm / Sửa / Bật-Tắt sản phẩm
+
+🔑 Kho hàng:
+• Nhập key / Xem & xóa key
+
+👤 User:
+• Nạp credit cho user
+
+📢 Tiện ích:
+• Broadcast / Thống kê
+
+📂 Danh mục:
+• Thêm / Xóa danh mục
+
+🛒 Đơn hàng:
+• Xem người mua
+• Sản phẩm đã bán
+
   `);
+
+  // ROW 1
 
   const row1 =
   new ActionRowBuilder()
@@ -48,13 +66,9 @@ module.exports = async (
 
     new ButtonBuilder()
 
-    .setCustomId(
-      "add_category"
-    )
+    .setCustomId("add_product")
 
-    .setLabel(
-      "➕ Thêm DM"
-    )
+    .setLabel("➕ Thêm SP")
 
     .setStyle(
       ButtonStyle.Success
@@ -64,34 +78,9 @@ module.exports = async (
 
     new ButtonBuilder()
 
-    .setCustomId(
-      "delete_category"
-    )
+    .setCustomId("edit_product")
 
-    .setLabel(
-      "🗑️ Xóa DM"
-    )
-
-    .setStyle(
-      ButtonStyle.Danger
-    )
-
-  );
-
-  const row2 =
-  new ActionRowBuilder()
-
-  .addComponents(
-
-    new ButtonBuilder()
-
-    .setCustomId(
-      "buyers"
-    )
-
-    .setLabel(
-      "👤 Người mua"
-    )
+    .setLabel("✏️ Sửa SP")
 
     .setStyle(
       ButtonStyle.Primary
@@ -101,16 +90,141 @@ module.exports = async (
 
     new ButtonBuilder()
 
-    .setCustomId(
-      "sold_products"
-    )
+    .setCustomId("toggle_product")
 
-    .setLabel(
-      "📦 Đã bán"
-    )
+    .setLabel("🔄 Bật/Tắt")
 
     .setStyle(
       ButtonStyle.Secondary
+    )
+
+  );
+
+  // ROW 2
+
+  const row2 =
+  new ActionRowBuilder()
+
+  .addComponents(
+
+    new ButtonBuilder()
+
+    .setCustomId("add_key")
+
+    .setLabel("🔑 Nhập Key")
+
+    .setStyle(
+      ButtonStyle.Success
+    ),
+
+
+
+    new ButtonBuilder()
+
+    .setCustomId("view_keys")
+
+    .setLabel("📋 Xem Key")
+
+    .setStyle(
+      ButtonStyle.Primary
+    ),
+
+
+
+    new ButtonBuilder()
+
+    .setCustomId("stock")
+
+    .setLabel("📦 Tồn Kho")
+
+    .setStyle(
+      ButtonStyle.Secondary
+    )
+
+  );
+
+  // ROW 3
+
+  const row3 =
+  new ActionRowBuilder()
+
+  .addComponents(
+
+    new ButtonBuilder()
+
+    .setCustomId("add_category")
+
+    .setLabel("📂 Thêm DM")
+
+    .setStyle(
+      ButtonStyle.Success
+    ),
+
+
+
+    new ButtonBuilder()
+
+    .setCustomId("delete_category")
+
+    .setLabel("🗑️ Xóa DM")
+
+    .setStyle(
+      ButtonStyle.Danger
+    ),
+
+
+
+    new ButtonBuilder()
+
+    .setCustomId("buyers")
+
+    .setLabel("👤 Người mua")
+
+    .setStyle(
+      ButtonStyle.Primary
+    )
+
+  );
+
+  // ROW 4
+
+  const row4 =
+  new ActionRowBuilder()
+
+  .addComponents(
+
+    new ButtonBuilder()
+
+    .setCustomId("sold_products")
+
+    .setLabel("🛒 Đã bán")
+
+    .setStyle(
+      ButtonStyle.Secondary
+    ),
+
+
+
+    new ButtonBuilder()
+
+    .setCustomId("broadcast")
+
+    .setLabel("📢 Broadcast")
+
+    .setStyle(
+      ButtonStyle.Primary
+    ),
+
+
+
+    new ButtonBuilder()
+
+    .setCustomId("stats")
+
+    .setLabel("📊 Thống kê")
+
+    .setStyle(
+      ButtonStyle.Success
     )
 
   );
@@ -121,7 +235,9 @@ module.exports = async (
 
     components: [
       row1,
-      row2
+      row2,
+      row3,
+      row4
     ]
 
   });
