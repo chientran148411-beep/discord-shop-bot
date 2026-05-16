@@ -7,73 +7,73 @@ const {
 
 } = require('discord.js');
 
-module.exports = async (interaction) => {
+module.exports = async (
+  interaction
+) => {
 
-  const embed = new EmbedBuilder()
+  const embed =
+  new EmbedBuilder()
 
-  .setTitle("🛠️ ADMIN PANEL")
+  .setTitle(
+    "🛠️ ADMIN PANEL"
+  )
 
   .setDescription(
-`⚡ Quản lý shop bằng nút`
+`
+⚡ Quản lý shop bằng nút
+`
   )
 
   .setColor("Purple");
 
 
 
-  const row = new ActionRowBuilder()
+  const row1 =
+  new ActionRowBuilder()
 
   .addComponents(
 
     new ButtonBuilder()
 
-    .setCustomId("add_category")
+    .setCustomId(
+      "add_category"
+    )
 
-    .setLabel("➕ Thêm Thư Mục")
+    .setLabel(
+      "➕ Thêm Danh Mục"
+    )
 
-    .setStyle(ButtonStyle.Primary),
-
-
-
-    new ButtonBuilder()
-
-    .setCustomId("add_product")
-
-    .setLabel("➕ Thêm Sản Phẩm")
-
-    .setStyle(ButtonStyle.Success),
+    .setStyle(
+      ButtonStyle.Primary
+    ),
 
 
 
     new ButtonBuilder()
 
-    .setCustomId("add_stock")
+    .setCustomId(
+      "delete_category"
+    )
 
-    .setLabel("➕ Thêm Tài Khoản")
+    .setLabel(
+      "🗑️ Xóa Danh Mục"
+    )
 
-    .setStyle(ButtonStyle.Secondary),
-
-
-
-    new ButtonBuilder()
-
-    .setCustomId("stats")
-
-    .setLabel("📊 Thống Kê")
-
-    .setStyle(ButtonStyle.Danger)
+    .setStyle(
+      ButtonStyle.Danger
+    )
 
   );
 
 
 
-  interaction.reply({
+  return interaction.reply({
 
     embeds: [embed],
 
-    components: [row],
+    components: [row1],
 
-    ephemeral: true
+    flags: 64
 
   });
 
