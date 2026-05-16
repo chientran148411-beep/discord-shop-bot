@@ -1,642 +1,337 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const {
-
   Client,
   GatewayIntentBits,
-  REST,
-  Routes,
+  Collection,
+  Events,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle
+} = require("discord.js");
 
-} = require('discord.js');
+const mongoose = require("mongoose");
 
-
-
-// DATABASE
-
-const connectDB =
-require('./config/database');
-
-
-
-// HANDLERS
-
-const welcomeSystem =
-require('./handlers/welcomeSystem');
-
-const adminPanel =
-require('./handlers/adminPanel');
-
-const {
-
-  addCategoryButton,
-  submitCategory,
-  deleteCategoryButton,
-  deleteCategory
-
-} = require(
-  './handlers/categoryHandler'
-);
-
-
-
-// CLIENT
+const Category = require("./models/category");
 
 const client = new Client({
-
-  intents: [
-
-    GatewayIntentBits.Guilds,
-
-    GatewayIntentBits.GuildMembers
-
-  ]
-
+  intents: [GatewayIntentBits.Guilds]
 });
 
+client.commands = new Collection();
 
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("✅ Đã kết nối MongoDB"))
+.catch(console.error);
 
-// CONNECT DATABASE
+client.once(Events.ClientReady, async () => {
+  console.log(`✅ ${client.user.tag} Đang trực tuyến`);
+});
 
-connectDB();
+client.on(Events.InteractionCreate, async interaction => {
 
+  // =========================
+  // /shop
+  // =========================
 
+  if (interaction.isChatInputCommand()) {
 
-// READY
+    if (interaction.commandName === "shop") {
 
-client.once('ready', async () => {
+      const categories = await Category.find();
 
-  console.log(
-`✅ ${client.user.tag} Online`
-  );
+      const embed = new EmbedBuilder()
+      .setColor("Blue")
+      .setTitle("🛒 KENIOS SHOP")
+      .setDescription(`
+✨ Chào mừng bạn đến với shop tự động
 
+📂 Chọn danh mục bên dưới
+      `);
 
+      let rows = [];
 
-  const commands = [
+      if (categories.length > 0) {
 
-    {
+        const buttons = categories.map(cat =>
+          new ButtonBuilder()
+          .setCustomId(`category_${cat._id}`)
+          .setLabel(cat.name)
+          .setStyle(ButtonStyle.Primary)
+        );
 
-      name: "shop",
+        for (let i = 0; i < buttons.length; i += 5) {
+          rows.push(
+            new ActionRowBuilder().addComponents(
+              buttons.slice(i, i + 5)
+            )
+          );
+        }
 
-      description: "Mở shop"
+      }
 
-    },
-
-    {
-
-      name: "admin",
-
-      description: "Mở admin panel"
+      return interaction.reply({
+        embeds: [embed],
+        components: rows
+      });
 
     }
 
-  ];
+    // =========================
+    // /admin
+    // =========================
 
+    if (interaction.commandName === "admin") {
 
-
-  const rest = new REST({
-
-    version: '10'
-
-  }).setToken(process.env.TOKEN);
-
-
-
-  try {
-
-    await rest.put(
-
-      Routes.applicationGuildCommands(
-
-        process.env.CLIENT_ID,
-
-        process.env.GUILD_ID
-
-      ),
-
-      {
-
-        body: commands
-
+      if (interaction.user.id !== process.env.ADMIN_ID) {
+        return interaction.reply({
+          content: "❌ Bạn không phải admin",
+          ephemeral: true
+        });
       }
 
-    );
-
-
-
-    console.log(
-"✅ Slash Commands Loaded"
-    );
-
-  } catch (err) {
-
-    console.log(err);
-
-  }
-
-});
-
-
-
-// MEMBER JOIN
-
-client.on(
-  'guildMemberAdd',
-  welcomeSystem
-);
-
-
-
-// INTERACTION
-
-client.on(
-
-  'interactionCreate',
-
-  async interaction => {
-
-    try {
-
-
-
-      // =====================
-      // CHAT COMMANDS
-      // =====================
-
-      if (
-        interaction.isChatInputCommand()
-      ) {
-
-        // ADMIN PANEL
-
-        if (
-          interaction.commandName ===
-          "admin"
-        ) {
-
-          return adminPanel(
-            interaction
-          );
-
-        }
-
-
-
-        // SHOP
-
-        if (
-          interaction.commandName ===
-          "shop"
-        ) {
-
-          const embed =
-          new EmbedBuilder()
-
-          .setTitle(
-            "🛒 KENIOS SHOP"
-          )
-
-          .setDescription(
-
-`✨ Chào mừng bạn đến với shop tự động
-
-📂 Chọn danh mục bên dưới`
-
-          )
-
-          .setColor("Blue")
-
-          .addFields(
-
-            {
-
-              name: "📦 Danh mục",
-
-              value:
-"• Free Fire\n• Roblox\n• Liên Quân"
-
-            },
-
-            {
-
-              name: "🟢 Trạng thái",
-
-              value:
-"Đang hoạt động"
-
-            }
-
-          )
-
-          .setFooter({
-
-            text:
-"KENIOS SHOP BOT"
-
-          });
-
-
-
-          const row =
-          new ActionRowBuilder()
-
-          .addComponents(
-
-            new ButtonBuilder()
-
-            .setCustomId("ff")
-
-            .setLabel("Free Fire")
-
-            .setStyle(
-              ButtonStyle.Primary
-            ),
-
-
-
-            new ButtonBuilder()
-
-            .setCustomId("rb")
-
-            .setLabel("Roblox")
-
-            .setStyle(
-              ButtonStyle.Success
-            ),
-
-
-
-            new ButtonBuilder()
-
-            .setCustomId("lq")
-
-            .setLabel("Liên Quân")
-
-            .setStyle(
-              ButtonStyle.Secondary
-            )
-
-          );
-
-
-
-          return interaction.reply({
-
-            embeds: [embed],
-
-            components: [row]
-
-          });
-
-        }
-
-      }
-
-
-
-      // =====================
-      // BUTTONS
-      // =====================
-
-      if (
-        interaction.isButton()
-      ) {
-
-
-
-        // ADD CATEGORY
-
-        if (
-          interaction.customId ===
-          "add_category"
-        ) {
-
-          return addCategoryButton(
-            interaction
-          );
-
-        }
-
-
-
-        // DELETE CATEGORY
-
-        if (
-          interaction.customId ===
-          "delete_category"
-        ) {
-
-          return deleteCategoryButton(
-            interaction
-          );
-
-        }
-
-
-
-        // FREE FIRE
-
-        if (
-          interaction.customId ===
-          "ff"
-        ) {
-
-          const embed =
-          new EmbedBuilder()
-
-          .setTitle(
-            "🔥 SHOP FREE FIRE"
-          )
-
-          .setDescription(
-`
-💎 Chọn gói bên dưới
-`
-          )
-
-          .setColor("Orange");
-
-
-
-          const row =
-          new ActionRowBuilder()
-
-          .addComponents(
-
-            new ButtonBuilder()
-
-            .setCustomId("ff_50k")
-
-            .setLabel("Gói 50K")
-
-            .setStyle(
-              ButtonStyle.Success
-            ),
-
-
-
-            new ButtonBuilder()
-
-            .setCustomId("ff_100k")
-
-            .setLabel("Gói 100K")
-
-            .setStyle(
-              ButtonStyle.Primary
-            )
-
-          );
-
-
-
-          return interaction.reply({
-
-            embeds: [embed],
-
-            components: [row],
-
-            flags: 64
-
-          });
-
-        }
-
-
-
-        // ROBLOX
-
-        if (
-          interaction.customId ===
-          "rb"
-        ) {
-
-          return interaction.reply({
-
-            content:
-"🛒 Shop Roblox đang cập nhật",
-
-            flags: 64
-
-          });
-
-        }
-
-
-
-        // LIEN QUAN
-
-        if (
-          interaction.customId ===
-          "lq"
-        ) {
-
-          return interaction.reply({
-
-            content:
-"🛒 Shop Liên Quân đang cập nhật",
-
-            flags: 64
-
-          });
-
-        }
-
-
-
-        // FF 50K
-
-        if (
-          interaction.customId ===
-          "ff_50k"
-        ) {
-
-          const embed =
-          new EmbedBuilder()
-
-          .setTitle(
-            "💳 THANH TOÁN"
-          )
-
-          .setDescription(
-
-`📦 Gói:
-Free Fire 50K
-
-💵 Giá:
-50.000đ
-
-🏦 Ngân hàng:
-${process.env.BANK_NAME}
-
-👤 Chủ TK:
-${process.env.BANK_OWNER}
-
-🔢 STK:
-${process.env.BANK_NUMBER}
-
-📝 Nội dung:
-FF50_${interaction.user.id}`
-
-          )
-
-          .setImage(
-
-`https://img.vietqr.io/image/MB-${process.env.BANK_NUMBER}-compact2.png?amount=50000&addInfo=FF50_${interaction.user.id}`
-
-          )
-
-          .setColor("Green");
-
-
-
-          const row =
-          new ActionRowBuilder()
-
-          .addComponents(
-
-            new ButtonBuilder()
-
-            .setCustomId(
-              "check_ff50"
-            )
-
-            .setLabel(
-              "✅ Kiểm Tra Thanh Toán"
-            )
-
-            .setStyle(
-              ButtonStyle.Success
-            )
-
-          );
-
-
-
-          return interaction.reply({
-
-            embeds: [embed],
-
-            components: [row],
-
-            flags: 64
-
-          });
-
-        }
-
-
-
-        // CHECK PAYMENT
-
-        if (
-          interaction.customId ===
-          "check_ff50"
-        ) {
-
-          return interaction.reply({
-
-            content:
-
-`✅ Thanh toán thành công
-
-👤 Tài khoản:
-kenios_ff_vip
-
-🔑 Mật khẩu:
-123456789`,
-
-            flags: 64
-
-          });
-
-        }
-
-      }
-
-
-
-      // =====================
-      // MODAL SUBMIT
-      // =====================
-
-      if (
-        interaction.isModalSubmit()
-      ) {
-
-        if (
-          interaction.customId ===
-          "modal_add_category"
-        ) {
-
-          return submitCategory(
-            interaction
-          );
-
-        }
-
-      }
-
-
-
-      // =====================
-      // SELECT MENU
-      // =====================
-
-      if (
-        interaction.isStringSelectMenu()
-      ) {
-
-        if (
-          interaction.customId ===
-          "select_delete_category"
-        ) {
-
-          return deleteCategory(
-            interaction
-          );
-
-        }
-
-      }
-
-    } catch (err) {
-
-      console.log(err);
-
-
-
-      try {
-
-        if (
-          !interaction.replied
-        ) {
-
-          await interaction.reply({
-
-            content:
-"❌ Bot đang gặp lỗi",
-
-            flags: 64
-
-          });
-
-        }
-
-      } catch {}
+      const embed = new EmbedBuilder()
+      .setColor("Purple")
+      .setTitle("⚙️ ADMIN PANEL")
+      .setDescription(`
+📦 Sản phẩm
+🔑 Kho hàng
+👤 User
+📊 Thống kê
+📂 Danh mục
+      `);
+
+      const row1 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+        .setCustomId("add_category")
+        .setLabel("➕ Thêm Danh Mục")
+        .setStyle(ButtonStyle.Success),
+
+        new ButtonBuilder()
+        .setCustomId("delete_category")
+        .setLabel("🗑️ Xóa Danh Mục")
+        .setStyle(ButtonStyle.Danger)
+      );
+
+      const row2 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+        .setCustomId("sold_products")
+        .setLabel("📦 Đã bán")
+        .setStyle(ButtonStyle.Primary),
+
+        new ButtonBuilder()
+        .setCustomId("buyers")
+        .setLabel("👤 Người mua")
+        .setStyle(ButtonStyle.Secondary)
+      );
+
+      return interaction.reply({
+        embeds: [embed],
+        components: [row1, row2]
+      });
 
     }
 
   }
 
-);
+  // =========================
+  // BUTTONS
+  // =========================
 
+  if (interaction.isButton()) {
 
+    // =========================
+    // ADD CATEGORY
+    // =========================
 
-// LOGIN
+    if (interaction.customId === "add_category") {
 
-client.login(
-  process.env.TOKEN
-);
+      const modal = new ModalBuilder()
+      .setCustomId("modal_add_category")
+      .setTitle("Thêm danh mục");
+
+      const input = new TextInputBuilder()
+      .setCustomId("category_name")
+      .setLabel("Tên danh mục")
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true);
+
+      const row = new ActionRowBuilder().addComponents(input);
+
+      modal.addComponents(row);
+
+      return interaction.showModal(modal);
+
+    }
+
+    // =========================
+    // DELETE CATEGORY
+    // =========================
+
+    if (interaction.customId === "delete_category") {
+
+      const categories = await Category.find();
+
+      if (categories.length === 0) {
+        return interaction.reply({
+          content: "❌ Không có danh mục",
+          ephemeral: true
+        });
+      }
+
+      const buttons = categories.map(cat =>
+        new ButtonBuilder()
+        .setCustomId(`delete_${cat._id}`)
+        .setLabel(cat.name)
+        .setStyle(ButtonStyle.Danger)
+      );
+
+      const rows = [];
+
+      for (let i = 0; i < buttons.length; i += 5) {
+        rows.push(
+          new ActionRowBuilder().addComponents(
+            buttons.slice(i, i + 5)
+          )
+        );
+      }
+
+      return interaction.reply({
+        content: "🗑️ Chọn danh mục cần xóa",
+        components: rows,
+        ephemeral: true
+      });
+
+    }
+
+    // =========================
+    // OPEN CATEGORY
+    // =========================
+
+    if (interaction.customId.startsWith("category_")) {
+
+      const id = interaction.customId.split("_")[1];
+
+      const category = await Category.findById(id);
+
+      if (!category) {
+        return interaction.reply({
+          content: "❌ Không tìm thấy danh mục",
+          ephemeral: true
+        });
+      }
+
+      return interaction.reply({
+        content: `📂 Bạn đã chọn danh mục: ${category.name}`,
+        ephemeral: true
+      });
+
+    }
+
+    // =========================
+    // DELETE SELECTED
+    // =========================
+
+    if (interaction.customId.startsWith("delete_")) {
+
+      const id = interaction.customId.split("_")[1];
+
+      await Category.findByIdAndDelete(id);
+
+      return interaction.update({
+        content: "✅ Đã xóa danh mục",
+        components: []
+      });
+
+    }
+
+    // =========================
+    // SOLD PRODUCTS
+    // =========================
+
+    if (interaction.customId === "sold_products") {
+
+      return interaction.reply({
+        content: "📦 Chưa có sản phẩm bán",
+        ephemeral: true
+      });
+
+    }
+
+    // =========================
+    // BUYERS
+    // =========================
+
+    if (interaction.customId === "buyers") {
+
+      return interaction.reply({
+        content: "👤 Chưa có người mua",
+        ephemeral: true
+      });
+
+    }
+
+  }
+
+  // =========================
+  // MODAL SUBMIT
+  // =========================
+
+  if (interaction.isModalSubmit()) {
+
+    if (interaction.customId === "modal_add_category") {
+
+      const name = interaction.fields.getTextInputValue("category_name");
+
+      const check = await Category.findOne({ name });
+
+      if (check) {
+        return interaction.reply({
+          content: "❌ Danh mục đã tồn tại",
+          ephemeral: true
+        });
+      }
+
+      await Category.create({
+        name
+      });
+
+      return interaction.reply({
+        content: `✅ Đã thêm danh mục: ${name}`,
+        ephemeral: true
+      });
+
+    }
+
+  }
+
+});
+
+// =========================
+// REGISTER COMMANDS
+// =========================
+
+client.on("ready", async () => {
+
+  const guild = client.guilds.cache.get(process.env.GUILD_ID);
+
+  if (!guild) return;
+
+  await guild.commands.create({
+    name: "shop",
+    description: "Mở shop"
+  });
+
+  await guild.commands.create({
+    name: "admin",
+    description: "Admin panel"
+  });
+
+  console.log("✅ Đã tải lệnh");
+});
+
+client.login(process.env.TOKEN);
