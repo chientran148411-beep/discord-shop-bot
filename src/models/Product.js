@@ -1,5 +1,4 @@
-const mongoose =
-require("mongoose");
+const mongoose = require("mongoose");
 
 const schema =
 new mongoose.Schema({
@@ -8,16 +7,18 @@ category: String,
 
 name: String,
 
-duration: String,
-
 price: Number,
 
+duration: String,
+
+stock: {
+type: Number,
+default: 0
+},
+
 enabled: {
-
 type: Boolean,
-
 default: true
-
 }
 
 });
