@@ -10,21 +10,34 @@ GatewayIntentBits,
 Collection
 } = require("discord.js");
 
-const mongoose = require("mongoose");
+const client =
+new Client({
 
-const client = new Client({
 intents: [
-GatewayIntentBits.Guilds,
-GatewayIntentBits.GuildMessages
+
+GatewayIntentBits.Guilds
+
 ]
+
 });
 
-client.commands = new Collection();
+client.commands =
+new Collection();
+
+// DATABASE
+
+require("./config/database")();
+
+// LOAD COMMANDS
 
 const commandFiles =
 fs.readdirSync(
-path.join(__dirname, "commands")
-).filter(file => file.endsWith(".js"));
+"./src/commands"
+)
+
+.filter(file =>
+file.endsWith(".js")
+);
 
 for (const file of commandFiles) {
 
@@ -38,24 +51,25 @@ command
 
 }
 
+// EVENTS
+
 require("./handlers/interactionCreate")(client);
 
 require("./handlers/modalHandler")(client);
 
-mongoose.connect(process.env.MONGO_URI)
+require("./handlers/adminPanel")(client);
 
-.then(() => {
+client.once(
+"ready",
+() => {
 
-console.log("✅ MongoDB Connected");
+console.log(
+`✅ ${client.user.tag} online`
+);
 
-})
+}
+);
 
-.catch(console.error);
-
-client.once("ready", () => {
-
-console.log(`✅ ${client.user.tag} Online`);
-
-});
-
-client.login(process.env.TOKEN);
+client.login(
+process.env.TOKEN
+);
