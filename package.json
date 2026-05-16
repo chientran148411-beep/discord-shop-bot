@@ -1,6 +1,7 @@
 {
   "name": "kenios-shop-bot",
   "version": "1.0.0",
+  "description": "KENIOS SHOP BOT",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
@@ -8,7 +9,6 @@
   "dependencies": {
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
-    "mongoose": "^8.3.2",
     "express": "^4.19.2"
   }
 }
