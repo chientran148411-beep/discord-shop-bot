@@ -1,21 +1,19 @@
-const mongoose = require("mongoose");
-
-const schema =
-new mongoose.Schema({
-
-product: String,
-
-key: String,
-
-used: {
-type: Boolean,
-default: false
-}
-
-});
+const mongoose =
+require("mongoose");
 
 module.exports =
 mongoose.model(
-"Key",
-schema
+  "Key",
+  new mongoose.Schema({
+
+    productId: String,
+
+    key: String,
+
+    used: {
+      type: Boolean,
+      default: false
+    }
+
+  })
 );
