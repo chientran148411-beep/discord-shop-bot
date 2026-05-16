@@ -1,10 +1,18 @@
+const Product =
+require("../models/Product");
+
 module.exports = (client) => {
 
 client.on(
 "interactionCreate",
 async interaction => {
 
-if (!interaction.isModalSubmit()) return;
+if (!interaction.isModalSubmit())
+return;
+
+// =====================
+// ADD PRODUCT
+// =====================
 
 if (
 interaction.customId ===
@@ -12,30 +20,41 @@ interaction.customId ===
 ) {
 
 const category =
-interaction.fields.getTextInputValue("category");
+interaction.fields.getTextInputValue(
+"category"
+);
 
-const product =
-interaction.fields.getTextInputValue("product");
+const name =
+interaction.fields.getTextInputValue(
+"product"
+);
 
 const duration =
-interaction.fields.getTextInputValue("duration");
+interaction.fields.getTextInputValue(
+"duration"
+);
 
 const price =
-interaction.fields.getTextInputValue("price");
+interaction.fields.getTextInputValue(
+"price"
+);
+
+await Product.create({
+
+category,
+
+name,
+
+duration,
+
+price
+
+});
 
 await interaction.reply({
 
 content:
-
-`✅ Đã thêm sản phẩm
-
-📂 ${category}
-
-📦 ${product}
-
-⏰ ${duration}
-
-💰 ${price}`,
+"✅ Đã thêm sản phẩm",
 
 ephemeral: true
 
