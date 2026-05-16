@@ -1,139 +1,132 @@
 require("dotenv").config();
 
-const {
-  Client,
-  GatewayIntentBits,
-  Events
-} = require("discord.js");
+const fs =
+require("fs");
+
+const path =
+require("path");
 
 const mongoose =
 require("mongoose");
 
+const {
 
+  Client,
 
+  Collection,
+
+  GatewayIntentBits,
+
+  Events
+
+} = require("discord.js");
+
+// ======================
 // CLIENT
+// ======================
 
 const client =
 new Client({
 
   intents: [
-    GatewayIntentBits.Guilds
+
+    GatewayIntentBits.Guilds,
+
+    GatewayIntentBits.GuildMessages,
+
+    GatewayIntentBits.MessageContent
+
   ]
 
 });
 
+// ======================
+// COLLECTION
+// ======================
 
+client.commands =
+new Collection();
 
-// DATABASE
+// ======================
+// LOAD COMMANDS
+// ======================
 
-mongoose.connect(
-  process.env.MONGO_URI
-)
+const commandsPath =
+path.join(
+  __dirname,
+  "commands"
+);
 
-.then(() => {
+const commandFiles =
+fs.readdirSync(commandsPath)
 
-  console.log(
-    "✅ MongoDB Connected"
+.filter(file =>
+  file.endsWith(".js")
+);
+
+for (
+  const file of commandFiles
+) {
+
+  const command =
+  require(
+    path.join(
+      commandsPath,
+      file
+    )
   );
 
-})
+  client.commands.set(
 
-.catch(console.error);
+    command.data.name,
 
+    command
 
+  );
 
-// MODELS
+}
 
-require("./models/Product");
-require("./models/Category");
-require("./models/Key");
-require("./models/Order");
-require("./models/User");
+console.log(
+  "✅ Đã tải các lệnh gạch chéo"
+);
 
+// ======================
+// LOAD HANDLERS
+// ======================
 
+const buttonsHandler =
+require(
+  "./handlers/buttons"
+);
 
-// HANDLERS
+const modalsHandler =
+require(
+  "./handlers/modals"
+);
 
-const buttonHandler =
-require("./handlers/buttons");
-
-const modalHandler =
-require("./handlers/modals");
-
-
-
-// PANELS
-
-const shopPanel =
-require("./panels/shopPanel");
-
-const adminPanel =
-require("./panels/adminPanel");
-
-
-
+// ======================
 // READY
+// ======================
 
 client.once(
 
   Events.ClientReady,
 
-  async () => {
+  () => {
 
     console.log(
-      `✅ ${client.user.tag} Online`
-    );
 
-    const guild =
-    client.guilds.cache.get(
-      process.env.GUILD_ID
-    );
+      `✅ ${client.user.tag} Đang trực tuyến`
 
-    if (!guild) {
-
-      console.log(
-        "❌ Không tìm thấy server"
-      );
-
-      return;
-
-    }
-
-    // SLASH COMMANDS
-
-    await guild.commands.set([
-
-      {
-
-        name: "shop",
-
-        description:
-        "Mở shop"
-
-      },
-
-      {
-
-        name: "admin",
-
-        description:
-        "Admin panel"
-
-      }
-
-    ]);
-
-    console.log(
-      "✅ Slash Commands Loaded"
     );
 
   }
 
 );
 
-
-
-// INTERACTION
+// ======================
+// INTERACTION CREATE
+// ======================
 
 client.on(
 
@@ -143,65 +136,51 @@ client.on(
 
     try {
 
-      // ===================
+      // ==================
       // SLASH COMMAND
-      // ===================
+      // ==================
 
       if (
         interaction.isChatInputCommand()
       ) {
 
-        // SHOP
+        const command =
+        client.commands.get(
+          interaction.commandName
+        );
 
-        if (
-          interaction.commandName ===
-          "shop"
-        ) {
+        if (!command)
+          return;
 
-          return shopPanel(
-            interaction
-          );
-
-        }
-
-        // ADMIN
-
-        if (
-          interaction.commandName ===
-          "admin"
-        ) {
-
-          return adminPanel(
-            interaction
-          );
-
-        }
-
-      }
-
-      // ===================
-      // BUTTON
-      // ===================
-
-      if (
-        interaction.isButton()
-      ) {
-
-        return buttonHandler(
+        await command.execute(
           interaction
         );
 
       }
 
-      // ===================
-      // MODAL
-      // ===================
+      // ==================
+      // BUTTON
+      // ==================
 
-      if (
+      else if (
+        interaction.isButton()
+      ) {
+
+        await buttonsHandler(
+          interaction
+        );
+
+      }
+
+      // ==================
+      // MODAL
+      // ==================
+
+      else if (
         interaction.isModalSubmit()
       ) {
 
-        return modalHandler(
+        await modalsHandler(
           interaction
         );
 
@@ -211,24 +190,36 @@ client.on(
 
       console.log(err);
 
-      try {
+      // ==================
+      // ERROR REPLY
+      // ==================
 
-        if (
-          !interaction.replied
-        ) {
+      if (
+        interaction.replied ||
+        interaction.deferred
+      ) {
 
-          await interaction.reply({
+        await interaction.followUp({
 
-            content:
-            "❌ Bot đang gặp lỗi",
+          content:
+          "❌ Bot đang gặp lỗi",
 
-            ephemeral: true
+          ephemeral: true
 
-          });
+        });
 
-        }
+      } else {
 
-      } catch {}
+        await interaction.reply({
+
+          content:
+          "❌ Bot đang gặp lỗi",
+
+          ephemeral: true
+
+        });
+
+      }
 
     }
 
@@ -236,10 +227,32 @@ client.on(
 
 );
 
+// ======================
+// MONGODB
+// ======================
 
+mongoose.connect(
 
+  process.env.MONGO_URI
+
+).then(() => {
+
+  console.log(
+    "✅ Đã kết nối MongoDB"
+  );
+
+}).catch(err => {
+
+  console.log(err);
+
+});
+
+// ======================
 // LOGIN
+// ======================
 
 client.login(
+
   process.env.TOKEN
+
 );
