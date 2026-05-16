@@ -4,7 +4,9 @@ client.on(
 "interactionCreate",
 async interaction => {
 
-if (interaction.isChatInputCommand()) {
+if (
+interaction.isChatInputCommand()
+) {
 
 const command =
 client.commands.get(
@@ -15,7 +17,9 @@ if (!command) return;
 
 try {
 
-await command.execute(interaction);
+await command.execute(
+interaction
+);
 
 } catch (err) {
 
