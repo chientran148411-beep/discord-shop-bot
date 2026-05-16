@@ -1,272 +1,81 @@
 const {
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ActionRowBuilder,
   EmbedBuilder,
+  ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle
 } = require("discord.js");
 
 const {
-  categories,
-  products
+  categories
 } = require("../config/database");
 
-module.exports = async (client, interaction) => {
+module.exports = async (client, message) => {
 
-  try {
+  if (message.author.bot) return;
 
-    // =========================
-    // BUTTON
-    // =========================
+  if (message.content !== "!shop") return;
 
-    if (interaction.isButton()) {
+  // AUTO CATEGORY DEMO
 
-      // =========================
-      // ADD CATEGORY
-      // =========================
+  if (categories.length === 0) {
 
-      if (interaction.customId === "add_category") {
-
-        const modal = new ModalBuilder()
-          .setCustomId("create_category")
-          .setTitle("Tạo Danh Mục");
-
-        const categoryInput = new TextInputBuilder()
-          .setCustomId("category_name")
-          .setLabel("Tên danh mục")
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true);
-
-        const row = new ActionRowBuilder()
-          .addComponents(categoryInput);
-
-        modal.addComponents(row);
-
-        return await interaction.showModal(modal);
-
-      }
-
-      // =========================
-      // ADD PRODUCT
-      // =========================
-
-      if (interaction.customId === "add_product") {
-
-        const modal = new ModalBuilder()
-          .setCustomId("create_product")
-          .setTitle("Tạo Sản Phẩm");
-
-        const productName = new TextInputBuilder()
-          .setCustomId("product_name")
-          .setLabel("Tên sản phẩm")
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true);
-
-        const productPrice = new TextInputBuilder()
-          .setCustomId("product_price")
-          .setLabel("Giá sản phẩm")
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true);
-
-        const productDesc = new TextInputBuilder()
-          .setCustomId("product_desc")
-          .setLabel("Mô tả")
-          .setStyle(TextInputStyle.Paragraph)
-          .setRequired(true);
-
-        modal.addComponents(
-          new ActionRowBuilder().addComponents(productName),
-          new ActionRowBuilder().addComponents(productPrice),
-          new ActionRowBuilder().addComponents(productDesc)
-        );
-
-        return await interaction.showModal(modal);
-
-      }
-
-      // =========================
-      // CATEGORY BUTTON
-      // =========================
-
-      if (interaction.customId.startsWith("category_")) {
-
-        const id = interaction.customId.replace("category_", "");
-
-        const category = categories.find(
-          x => x.id === id
-        );
-
-        if (!category) {
-
-          return interaction.reply({
-            content: "❌ Không tìm thấy danh mục",
-            ephemeral: true
-          });
-
-        }
-
-        const embed = new EmbedBuilder()
-          .setTitle(`📂 ${category.name}`)
-          .setDescription(category.desc || "Không có mô tả")
-          .setColor("Blue");
-
-        const row = new ActionRowBuilder();
-
-        const categoryProducts = products.filter(
-          x => x.category === category.name
-        );
-
-        categoryProducts.slice(0, 5).forEach(product => {
-
-          row.addComponents(
-
-            new ButtonBuilder()
-              .setCustomId(`product_${product.id}`)
-              .setLabel(product.name)
-              .setStyle(ButtonStyle.Secondary)
-
-          );
-
-        });
-
-        return await interaction.reply({
-          embeds: [embed],
-          components: row.components.length ? [row] : [],
-          ephemeral: true
-        });
-
-      }
-
-      // =========================
-      // PRODUCT BUTTON
-      // =========================
-
-      if (interaction.customId.startsWith("product_")) {
-
-        const id = interaction.customId.replace("product_", "");
-
-        const product = products.find(
-          x => x.id === id
-        );
-
-        if (!product) {
-
-          return interaction.reply({
-            content: "❌ Không tìm thấy sản phẩm",
-            ephemeral: true
-          });
-
-        }
-
-        const embed = new EmbedBuilder()
-          .setTitle(`🛒 ${product.name}`)
-          .addFields(
-            {
-              name: "💵 Giá",
-              value: product.price
-            },
-            {
-              name: "📝 Mô tả",
-              value: product.desc
-            }
-          )
-          .setColor("Green");
-
-        return await interaction.reply({
-          embeds: [embed],
-          ephemeral: true
-        });
-
-      }
-
-    }
-
-    // =========================
-    // MODAL SUBMIT
-    // =========================
-
-    if (interaction.isModalSubmit()) {
-
-      // =========================
-      // CREATE CATEGORY
-      // =========================
-
-      if (interaction.customId === "create_category") {
-
-        const name =
-          interaction.fields.getTextInputValue("category_name");
-
-        categories.push({
-          id: Date.now().toString(),
-          name,
-          desc: "Danh mục mới"
-        });
-
-        return interaction.reply({
-          content: `✅ Đã tạo danh mục ${name}`,
-          ephemeral: true
-        });
-
-      }
-
-      // =========================
-      // CREATE PRODUCT
-      // =========================
-
-      if (interaction.customId === "create_product") {
-
-        const name =
-          interaction.fields.getTextInputValue("product_name");
-
-        const price =
-          interaction.fields.getTextInputValue("product_price");
-
-        const desc =
-          interaction.fields.getTextInputValue("product_desc");
-
-        let categoryName = "Chưa phân loại";
-
-        if (categories.length > 0) {
-          categoryName = categories[0].name;
-        }
-
-        products.push({
-          id: Date.now().toString(),
-          name,
-          price,
-          desc,
-          category: categoryName
-        });
-
-        return interaction.reply({
-          content: `✅ Đã tạo sản phẩm ${name}`,
-          ephemeral: true
-        });
-
-      }
-
-    }
-
-  } catch (err) {
-
-    console.log("❌ INTERACTION ERROR:");
-    console.log(err);
-
-    try {
-
-      if (!interaction.replied) {
-
-        await interaction.reply({
-          content: "❌ Bot đang lỗi",
-          ephemeral: true
-        });
-
-      }
-
-    } catch {}
+    categories.push({
+      id: "pubg",
+      name: "PUBG",
+      desc: "Danh mục PUBG"
+    });
 
   }
+
+  const embed = new EmbedBuilder()
+    .setTitle("🛒 KENIOS SHOP")
+    .setDescription(
+      "✨ Chào mừng đến shop tự động\n\n📂 Chọn danh mục bên dưới"
+    )
+    .setColor("Blue");
+
+  const row = new ActionRowBuilder();
+
+  // CATEGORY BUTTONS
+
+  categories.slice(0, 3).forEach((cat) => {
+
+    row.addComponents(
+
+      new ButtonBuilder()
+        .setCustomId(`category_${cat.id}`)
+        .setLabel(cat.name)
+        .setStyle(ButtonStyle.Primary)
+
+    );
+
+  });
+
+  // ADD CATEGORY
+
+  row.addComponents(
+
+    new ButtonBuilder()
+      .setCustomId("add_category")
+      .setLabel("➕ DANH MỤC")
+      .setStyle(ButtonStyle.Success)
+
+  );
+
+  // ADD PRODUCT
+
+  row.addComponents(
+
+    new ButtonBuilder()
+      .setCustomId("add_product")
+      .setLabel("🛒 SẢN PHẨM")
+      .setStyle(ButtonStyle.Danger)
+
+  );
+
+  await message.channel.send({
+    embeds: [embed],
+    components: [row]
+  });
 
 };
