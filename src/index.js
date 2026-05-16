@@ -1,146 +1,115 @@
 require("dotenv").config();
 
+const express = require("express");
+const app = express();
+
 const {
   Client,
-  GatewayIntentBits
+  GatewayIntentBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder
 } = require("discord.js");
 
-const mongoose = require("mongoose");
-
-const express = require("express");
-
-// ======================
-// CLIENT
-// ======================
+// =========================
+// DISCORD CLIENT
+// =========================
 
 const client = new Client({
-
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent
   ]
-
 });
 
-// ======================
-// EXPRESS
-// ======================
-
-const app = express();
-
-app.use(express.json());
-
-// ======================
-// MONGODB
-// ======================
-
-mongoose.connect(process.env.MONGO_URI)
-
-.then(() => {
-
-  console.log("✅ Đã kết nối MongoDB");
-
-})
-
-.catch((err) => {
-
-  console.log(err);
-
-});
-
-// ======================
-// WEBHOOK TEST
-// ======================
-
-app.get("/", (req, res) => {
-
-  res.send("KENIOS BOT ONLINE");
-
-});
-
-// ======================
-// SEPAY WEBHOOK
-// ======================
-
-app.post("/sepay-webhook", async (req, res) => {
-
-  try {
-
-    console.log(req.body);
-
-    return res.json({
-
-      success: true
-
-    });
-
-  }
-
-  catch (err) {
-
-    console.log(err);
-
-    return res.status(500).json({
-
-      success: false
-
-    });
-
-  }
-
-});
-
-// ======================
-// EVENTS
-// ======================
-
-require("./handlers/interactionCreate")(client);
-
-// ======================
+// =========================
 // READY
-// ======================
+// =========================
 
 client.once("ready", () => {
-
   console.log(`✅ ${client.user.tag} online`);
-
 });
 
-// ======================
-// LOGIN
-// ======================
+// =========================
+// COMMAND SHOP
+// =========================
 
-client.login(process.env.TOKEN);
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
 
-// ======================
-// PORT
-// ======================
+  if (message.content === "!shop") {
 
-client.login(process.env.TOKEN);
+    const embed = new EmbedBuilder()
+      .setTitle("🛒 KENIOS SHOP")
+      .setDescription("✨ Chào mừng đến shop tự động\n\n📂 Chọn danh mục bên dưới")
+      .setColor("Blue");
 
-// ======================
-// EXPRESS
-// ======================
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("pubg")
+        .setLabel("PUBG")
+        .setStyle(ButtonStyle.Primary),
 
-const express = require("express");
+      new ButtonBuilder()
+        .setCustomId("admin")
+        .setLabel("ADMIN")
+        .setStyle(ButtonStyle.Danger)
+    );
 
-const app = express();
+    await message.channel.send({
+      embeds: [embed],
+      components: [row]
+    });
+  }
+});
+
+// =========================
+// BUTTON
+// =========================
+
+client.on("interactionCreate", async (interaction) => {
+
+  if (!interaction.isButton()) return;
+
+  if (interaction.customId === "pubg") {
+
+    await interaction.reply({
+      content: "📦 Danh mục PUBG",
+      ephemeral: true
+    });
+  }
+
+  if (interaction.customId === "admin") {
+
+    await interaction.reply({
+      content: "🛠️ Khu ADMIN",
+      ephemeral: true
+    });
+  }
+});
+
+// =========================
+// WEB SERVER
+// =========================
 
 app.get("/", (req, res) => {
-
   res.send("KENIOS ONLINE");
-
 });
 
-// ======================
+// =========================
+// LOGIN
+// =========================
+
+client.login(process.env.TOKEN);
+
+// =========================
 // PORT
-// ======================
+// =========================
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-
   console.log(`✅ Webhook online ${PORT}`);
-
 });
