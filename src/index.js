@@ -13,6 +13,20 @@ const {
 } = require("discord.js");
 
 // =========================
+// EXPRESS
+// =========================
+
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("KENIOS ONLINE");
+});
+
+app.get("/sepay-webhook", (req, res) => {
+  res.send("Webhook OK");
+});
+
+// =========================
 // DISCORD CLIENT
 // =========================
 
@@ -28,15 +42,16 @@ const client = new Client({
 // READY
 // =========================
 
-client.once("ready", () => {
-  console.log(`✅ ${client.user.tag} online`);
+client.once("clientReady", () => {
+  console.log(`✅ ${client.user.tag} đang trực tuyến`);
 });
 
 // =========================
-// COMMAND SHOP
+// MESSAGE COMMAND
 // =========================
 
 client.on("messageCreate", async (message) => {
+
   if (message.author.bot) return;
 
   if (message.content === "!shop") {
@@ -47,6 +62,7 @@ client.on("messageCreate", async (message) => {
       .setColor("Blue");
 
     const row = new ActionRowBuilder().addComponents(
+
       new ButtonBuilder()
         .setCustomId("pubg")
         .setLabel("PUBG")
@@ -56,46 +72,46 @@ client.on("messageCreate", async (message) => {
         .setCustomId("admin")
         .setLabel("ADMIN")
         .setStyle(ButtonStyle.Danger)
+
     );
 
     await message.channel.send({
       embeds: [embed],
       components: [row]
     });
+
   }
+
 });
 
 // =========================
-// BUTTON
+// BUTTON INTERACTION
 // =========================
 
 client.on("interactionCreate", async (interaction) => {
 
   if (!interaction.isButton()) return;
 
+  // PUBG
   if (interaction.customId === "pubg") {
 
     await interaction.reply({
       content: "📦 Danh mục PUBG",
       ephemeral: true
     });
+
   }
 
+  // ADMIN
   if (interaction.customId === "admin") {
 
     await interaction.reply({
       content: "🛠️ Khu ADMIN",
       ephemeral: true
     });
+
   }
-});
 
-// =========================
-// WEB SERVER
-// =========================
-
-app.get("/", (req, res) => {
-  res.send("KENIOS ONLINE");
 });
 
 // =========================
@@ -108,8 +124,8 @@ client.login(process.env.TOKEN);
 // PORT
 // =========================
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`✅ Webhook online ${PORT}`);
+  console.log(`✅ Webhook trực tuyến ${PORT}`);
 });
