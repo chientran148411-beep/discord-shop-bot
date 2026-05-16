@@ -1,25 +1,40 @@
-const {
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
-} = require("discord.js");
+const Product =
+require("../models/Product");
+
+const Category =
+require("../models/Category");
+
+const Key =
+require("../models/Key");
 
 module.exports = async (
   interaction
 ) => {
 
-  // CHECK ADMIN
+  // =====================
+  // ADD CATEGORY
+  // =====================
 
   if (
-    interaction.user.id !==
-    process.env.ADMIN_ID
+    interaction.customId ===
+    "add_category_modal"
   ) {
+
+    const name =
+    interaction.fields.getTextInputValue(
+      "category_name"
+    );
+
+    await Category.create({
+
+      name
+
+    });
 
     return interaction.reply({
 
       content:
-      "❌ Bạn không phải admin",
+      `✅ Đã thêm danh mục: ${name}`,
 
       ephemeral: true
 
@@ -27,314 +42,268 @@ module.exports = async (
 
   }
 
-  // EMBED
+  // =====================
+  // ADD PRODUCT
+  // =====================
 
-  const embed =
-  new EmbedBuilder()
+  if (
+    interaction.customId ===
+    "add_product_modal"
+  ) {
 
-  .setColor("#8e44ad")
+    const category =
+    interaction.fields.getTextInputValue(
+      "product_category"
+    );
 
-  .setTitle(
-    "⚙️ ADMIN PANEL"
-  )
+    const name =
+    interaction.fields.getTextInputValue(
+      "product_name"
+    );
 
-  .setDescription(
+    const duration =
+    interaction.fields.getTextInputValue(
+      "product_duration"
+    );
 
-`📦 SẢN PHẨM
-• Thêm / Sửa / Bật-Tắt
+    const price =
+    interaction.fields.getTextInputValue(
+      "product_price"
+    );
 
-💰 GIÁ & THỜI GIAN
-• Sửa giá
-• Sửa thời gian
+    // CREATE CATEGORY IF NOT EXISTS
 
-🔑 KEY
-• Nhập / Xem / Xóa
+    let findCategory =
+    await Category.findOne({
 
-📂 DANH MỤC
-• Thêm / Xóa
+      name: category
 
-🛒 ĐƠN HÀNG
-• Người mua
-• Đã bán
+    });
 
-📊 HỆ THỐNG
-• Broadcast
-• Thống kê
-• Tồn kho`
+    if (!findCategory) {
 
-  );
+      findCategory =
+      await Category.create({
 
-  // ROW 1
+        name: category
 
-  const row1 =
-  new ActionRowBuilder()
+      });
 
-  .addComponents(
+    }
 
-    new ButtonBuilder()
+    // CREATE PRODUCT
 
-    .setCustomId(
-      "add_product"
-    )
+    await Product.create({
 
-    .setLabel(
-      "➕ Thêm SP"
-    )
+      category:
+      findCategory.name,
 
-    .setStyle(
-      ButtonStyle.Success
-    ),
+      name,
 
-    new ButtonBuilder()
+      duration,
 
-    .setCustomId(
-      "edit_product"
-    )
+      price,
 
-    .setLabel(
-      "✏️ Sửa SP"
-    )
+      enabled: true,
 
-    .setStyle(
-      ButtonStyle.Primary
-    ),
+      sold: 0
 
-    new ButtonBuilder()
+    });
 
-    .setCustomId(
-      "toggle_product"
-    )
+    return interaction.reply({
 
-    .setLabel(
-      "🔄 Bật/Tắt"
-    )
+      content:
+`✅ Đã thêm sản phẩm
 
-    .setStyle(
-      ButtonStyle.Secondary
-    )
+📂 ${category}
+📦 ${name}
+⏰ ${duration}
+💰 ${price}đ`,
 
-  );
+      ephemeral: true
 
-  // ROW 2
+    });
 
-  const row2 =
-  new ActionRowBuilder()
+  }
 
-  .addComponents(
+  // =====================
+  // EDIT PRICE
+  // =====================
 
-    new ButtonBuilder()
+  if (
+    interaction.customId ===
+    "edit_price_modal"
+  ) {
 
-    .setCustomId(
-      "edit_price"
-    )
+    const name =
+    interaction.fields.getTextInputValue(
+      "product_name"
+    );
 
-    .setLabel(
-      "💰 Sửa Giá"
-    )
+    const newPrice =
+    interaction.fields.getTextInputValue(
+      "new_price"
+    );
 
-    .setStyle(
-      ButtonStyle.Success
-    ),
+    const product =
+    await Product.findOne({
 
-    new ButtonBuilder()
+      name
 
-    .setCustomId(
-      "edit_duration"
-    )
+    });
 
-    .setLabel(
-      "⏰ Sửa TG"
-    )
+    if (!product) {
 
-    .setStyle(
-      ButtonStyle.Primary
-    ),
+      return interaction.reply({
 
-    new ButtonBuilder()
+        content:
+        "❌ Không tìm thấy sản phẩm",
 
-    .setCustomId(
-      "stock"
-    )
+        ephemeral: true
 
-    .setLabel(
-      "📦 Tồn Kho"
-    )
+      });
 
-    .setStyle(
-      ButtonStyle.Secondary
-    )
+    }
 
-  );
+    product.price =
+    newPrice;
 
-  // ROW 3
+    await product.save();
 
-  const row3 =
-  new ActionRowBuilder()
+    return interaction.reply({
 
-  .addComponents(
+      content:
+      `✅ Đã sửa giá ${name}`,
 
-    new ButtonBuilder()
+      ephemeral: true
 
-    .setCustomId(
-      "add_key"
-    )
+    });
 
-    .setLabel(
-      "🔑 Nhập Key"
-    )
+  }
 
-    .setStyle(
-      ButtonStyle.Success
-    ),
+  // =====================
+  // EDIT DURATION
+  // =====================
 
-    new ButtonBuilder()
+  if (
+    interaction.customId ===
+    "edit_duration_modal"
+  ) {
 
-    .setCustomId(
-      "view_keys"
-    )
+    const name =
+    interaction.fields.getTextInputValue(
+      "product_name"
+    );
 
-    .setLabel(
-      "📋 Xem Key"
-    )
+    const duration =
+    interaction.fields.getTextInputValue(
+      "new_duration"
+    );
 
-    .setStyle(
-      ButtonStyle.Primary
-    ),
+    const product =
+    await Product.findOne({
 
-    new ButtonBuilder()
+      name
 
-    .setCustomId(
-      "delete_key"
-    )
+    });
 
-    .setLabel(
-      "🗑️ Xóa Key"
-    )
+    if (!product) {
 
-    .setStyle(
-      ButtonStyle.Danger
-    )
+      return interaction.reply({
 
-  );
+        content:
+        "❌ Không tìm thấy sản phẩm",
 
-  // ROW 4
+        ephemeral: true
 
-  const row4 =
-  new ActionRowBuilder()
+      });
 
-  .addComponents(
+    }
 
-    new ButtonBuilder()
+    product.duration =
+    duration;
 
-    .setCustomId(
-      "add_category"
-    )
+    await product.save();
 
-    .setLabel(
-      "📂 Thêm DM"
-    )
+    return interaction.reply({
 
-    .setStyle(
-      ButtonStyle.Success
-    ),
+      content:
+      `✅ Đã sửa thời gian ${name}`,
 
-    new ButtonBuilder()
+      ephemeral: true
 
-    .setCustomId(
-      "delete_category"
-    )
+    });
 
-    .setLabel(
-      "🗑️ Xóa DM"
-    )
+  }
 
-    .setStyle(
-      ButtonStyle.Danger
-    ),
+  // =====================
+  // ADD KEY
+  // =====================
 
-    new ButtonBuilder()
+  if (
+    interaction.customId ===
+    "add_key_modal"
+  ) {
 
-    .setCustomId(
-      "buyers"
-    )
+    const productName =
+    interaction.fields.getTextInputValue(
+      "product_name"
+    );
 
-    .setLabel(
-      "👤 Người Mua"
-    )
+    const keyText =
+    interaction.fields.getTextInputValue(
+      "product_key"
+    );
 
-    .setStyle(
-      ButtonStyle.Primary
-    )
+    const product =
+    await Product.findOne({
 
-  );
+      name: productName
 
-  // ROW 5
+    });
 
-  const row5 =
-  new ActionRowBuilder()
+    if (!product) {
 
-  .addComponents(
+      return interaction.reply({
 
-    new ButtonBuilder()
+        content:
+        "❌ Không tìm thấy sản phẩm",
 
-    .setCustomId(
-      "sold_products"
-    )
+        ephemeral: true
 
-    .setLabel(
-      "🛒 Đã Bán"
-    )
+      });
 
-    .setStyle(
-      ButtonStyle.Secondary
-    ),
+    }
 
-    new ButtonBuilder()
+    const keys =
+    keyText.split("\n");
 
-    .setCustomId(
-      "broadcast"
-    )
+    for (
+      const k of keys
+    ) {
 
-    .setLabel(
-      "📢 Broadcast"
-    )
+      await Key.create({
 
-    .setStyle(
-      ButtonStyle.Primary
-    ),
+        productId:
+        product._id,
 
-    new ButtonBuilder()
+        key: k,
 
-    .setCustomId(
-      "statistics"
-    )
+        sold: false
 
-    .setLabel(
-      "📊 Thống Kê"
-    )
+      });
 
-    .setStyle(
-      ButtonStyle.Success
-    )
+    }
 
-  );
+    return interaction.reply({
 
-  // SEND
+      content:
+      `✅ Đã nhập ${keys.length} key`,
 
-  await interaction.reply({
+      ephemeral: true
 
-    embeds: [embed],
+    });
 
-    components: [
-
-      row1,
-      row2,
-      row3,
-      row4,
-      row5
-
-    ]
-
-  });
+  }
 
 };
