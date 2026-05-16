@@ -1,210 +1,236 @@
-const express =
-require("express");
+require("dotenv").config();
 
-const Product =
-require("./models/Product");
+const {
+  Client,
+  GatewayIntentBits,
+  Collection
+} = require("discord.js");
 
-const Key =
-require("./models/Key");
+const mongoose =
+require("mongoose");
 
-const Order =
-require("./models/Order");
+const fs =
+require("fs");
 
-module.exports =
-(client) => {
+const path =
+require("path");
 
-  const app =
-  express();
+// =========================
+// CLIENT
+// =========================
 
-  app.use(
-    express.json()
+const client =
+new Client({
+
+  intents: [
+
+    GatewayIntentBits.Guilds,
+
+    GatewayIntentBits.GuildMessages,
+
+    GatewayIntentBits.MessageContent,
+
+    GatewayIntentBits.DirectMessages
+
+  ]
+
+});
+
+// =========================
+// COMMANDS
+// =========================
+
+client.commands =
+new Collection();
+
+const commandsPath =
+path.join(
+  __dirname,
+  "commands"
+);
+
+const commandFiles =
+fs.readdirSync(
+  commandsPath
+)
+
+.filter(file =>
+  file.endsWith(".js")
+);
+
+for (const file of commandFiles) {
+
+  const command =
+  require(
+    `./commands/${file}`
   );
 
-  // =========================
-  // WEBHOOK SEPAY
-  // =========================
-
-  app.post(
-    "/sepay-webhook",
-    async (req, res) => {
-
-      try {
-
-        const data =
-        req.body;
-
-        const content =
-        data.content || "";
-
-        // =====================
-        // CHECK ORDER CODE
-        // =====================
-
-        if (
-          !content.startsWith(
-            "KENIOS_"
-          )
-        ) {
-
-          return res.send({
-            success: false
-          });
-
-        }
-
-        // =====================
-        // FIND ORDER
-        // =====================
-
-        const order =
-        await Order.findOne({
-
-          orderCode: content,
-
-          status: "pending"
-
-        });
-
-        if (!order) {
-
-          return res.send({
-            success: false
-          });
-
-        }
-
-        // =====================
-        // CHECK PRODUCT
-        // =====================
-
-        const product =
-        await Product.findById(
-          order.productId
-        );
-
-        if (!product) {
-
-          return res.send({
-            success: false
-          });
-
-        }
-
-        // =====================
-        // GET KEY
-        // =====================
-
-        const key =
-        await Key.findOne({
-
-          productId:
-          product._id,
-
-          used: false
-
-        });
-
-        if (!key) {
-
-          return res.send({
-            success: false,
-
-            message:
-            "Hết key"
-
-          });
-
-        }
-
-        // =====================
-        // UPDATE
-        // =====================
-
-        order.status =
-        "paid";
-
-        await order.save();
-
-        key.used = true;
-
-        await key.save();
-
-        // =====================
-        // SEND USER
-        // =====================
-
-        const user =
-        await client.users.fetch(
-          order.userId
-        );
-
-        await user.send({
-
-          embeds: [
-
-            {
-
-              color: 0x2ecc71,
-
-              title:
-              "✅ THANH TOÁN THÀNH CÔNG",
-
-              description:
-`📦 Sản phẩm:
-${product.name}
-
-🔑 KEY:
-${key.key}
-
-⏰ Thời gian:
-${product.duration}
-
-💰 Giá:
-${product.price}`
-
-            }
-
-          ]
-
-        });
-
-        // =====================
-        // DONE
-        // =====================
-
-        return res.send({
-
-          success: true
-
-        });
-
-      }
-
-      catch (err) {
-
-        console.log(err);
-
-        return res.send({
-
-          success: false
-
-        });
-
-      }
-
-    }
+  client.commands.set(
+    command.data.name,
+    command
   );
 
-  // =========================
-  // START SERVER
-  // =========================
+}
 
-  app.listen(3000, () => {
+// =========================
+// MONGODB
+// =========================
+
+mongoose.connect(
+  process.env.MONGO_URI
+)
+
+.then(() => {
+
+  console.log(
+    "✅ Đã kết nối MongoDB"
+  );
+
+})
+
+.catch(err => {
+
+  console.log(err);
+
+});
+
+// =========================
+// HANDLERS
+// =========================
+
+const interactionCreate =
+require(
+  "./handlers/interactionCreate"
+);
+
+const shopHandler =
+require(
+  "./handlers/shopHandler"
+);
+
+const buyHandler =
+require(
+  "./handlers/buyHandler"
+);
+
+const checkPayHandler =
+require(
+  "./handlers/checkPayHandler"
+);
+
+// =========================
+// WEBHOOK SERVER
+// =========================
+
+const startServer =
+require("./server");
+
+// =========================
+// READY
+// =========================
+
+client.once(
+  "clientReady",
+  () => {
 
     console.log(
-      "✅ Webhook online"
+      `✅ ${client.user.tag} online`
     );
 
-  });
+  }
+);
 
-};
+// =========================
+// INTERACTIONS
+// =========================
+
+client.on(
+  "interactionCreate",
+  async interaction => {
+
+    try {
+
+      // =====================
+      // SLASH COMMAND
+      // =====================
+
+      if (
+        interaction.isChatInputCommand()
+      ) {
+
+        const command =
+        client.commands.get(
+          interaction.commandName
+        );
+
+        if (!command) return;
+
+        await command.execute(
+          interaction,
+          client
+        );
+
+      }
+
+      // =====================
+      // BUTTON / MODAL
+      // =====================
+
+      await interactionCreate(
+        interaction
+      );
+
+      await shopHandler(
+        interaction
+      );
+
+      await buyHandler(
+        interaction
+      );
+
+      await checkPayHandler(
+        interaction
+      );
+
+    }
+
+    catch (err) {
+
+      console.log(err);
+
+      if (
+        interaction.replied ||
+        interaction.deferred
+      ) {
+
+        return;
+
+      }
+
+      return interaction.reply({
+
+        content:
+        "❌ Có lỗi xảy ra",
+
+        ephemeral: true
+
+      });
+
+    }
+
+  }
+);
+
+// =========================
+// START WEBHOOK
+// =========================
+
+startServer(client);
+
+// =========================
+// LOGIN
+// =========================
+
+client.login(
+  process.env.TOKEN
+);
