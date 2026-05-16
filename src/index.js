@@ -1,4 +1,13 @@
-require('dotenv').config();
+const {
+
+  addCategoryButton,
+  submitCategory,
+  deleteCategoryButton,
+  deleteCategory
+
+} = require(
+  './handlers/categoryHandler'
+);require('dotenv').config();
 
 const {
 
