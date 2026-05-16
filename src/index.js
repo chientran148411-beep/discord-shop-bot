@@ -117,6 +117,26 @@ client.login(process.env.TOKEN);
 // PORT
 // ======================
 
+client.login(process.env.TOKEN);
+
+// ======================
+// EXPRESS
+// ======================
+
+const express = require("express");
+
+const app = express();
+
+app.get("/", (req, res) => {
+
+  res.send("KENIOS ONLINE");
+
+});
+
+// ======================
+// PORT
+// ======================
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
