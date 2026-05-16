@@ -98,12 +98,16 @@ client.on("interactionCreate", async (interaction) => {
 
   try {
 
+    // ACK interaction trước
+    await interaction.deferReply({
+      flags: 64
+    });
+
     // PUBG
     if (interaction.customId === "pubg") {
 
-      await interaction.reply({
-        content: "📦 Danh mục PUBG",
-        flags: 64
+      await interaction.editReply({
+        content: "📦 Danh mục PUBG"
       });
 
     }
@@ -111,16 +115,15 @@ client.on("interactionCreate", async (interaction) => {
     // ADMIN
     if (interaction.customId === "admin") {
 
-      await interaction.reply({
-        content: "🛠️ Khu ADMIN",
-        flags: 64
+      await interaction.editReply({
+        content: "🛠️ Khu ADMIN"
       });
 
     }
 
   } catch (err) {
 
-    console.log(err);
+    console.log("BUTTON ERROR:", err);
 
   }
 
