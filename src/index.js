@@ -43,11 +43,13 @@ const client = new Client({
 // =========================
 
 client.once("clientReady", () => {
+
   console.log(`✅ ${client.user.tag} đang trực tuyến`);
+
 });
 
 // =========================
-// MESSAGE COMMAND
+// COMMAND SHOP
 // =========================
 
 client.on("messageCreate", async (message) => {
@@ -58,7 +60,9 @@ client.on("messageCreate", async (message) => {
 
     const embed = new EmbedBuilder()
       .setTitle("🛒 KENIOS SHOP")
-      .setDescription("✨ Chào mừng đến shop tự động\n\n📂 Chọn danh mục bên dưới")
+      .setDescription(
+        "✨ Chào mừng đến shop tự động\n\n📂 Chọn danh mục bên dưới"
+      )
       .setColor("Blue");
 
     const row = new ActionRowBuilder().addComponents(
@@ -92,23 +96,31 @@ client.on("interactionCreate", async (interaction) => {
 
   if (!interaction.isButton()) return;
 
-  // PUBG
-  if (interaction.customId === "pubg") {
+  try {
 
-    await interaction.reply({
-      content: "📦 Danh mục PUBG",
-      ephemeral: true
-    });
+    // PUBG
+    if (interaction.customId === "pubg") {
 
-  }
+      await interaction.reply({
+        content: "📦 Danh mục PUBG",
+        flags: 64
+      });
 
-  // ADMIN
-  if (interaction.customId === "admin") {
+    }
 
-    await interaction.reply({
-      content: "🛠️ Khu ADMIN",
-      ephemeral: true
-    });
+    // ADMIN
+    if (interaction.customId === "admin") {
+
+      await interaction.reply({
+        content: "🛠️ Khu ADMIN",
+        flags: 64
+      });
+
+    }
+
+  } catch (err) {
+
+    console.log(err);
 
   }
 
@@ -127,5 +139,7 @@ client.login(process.env.TOKEN);
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
+
   console.log(`✅ Webhook trực tuyến ${PORT}`);
+
 });
