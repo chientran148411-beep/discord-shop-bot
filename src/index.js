@@ -43,13 +43,11 @@ const client = new Client({
 // =========================
 
 client.once("clientReady", () => {
-
   console.log(`✅ ${client.user.tag} đang trực tuyến`);
-
 });
 
 // =========================
-// COMMAND SHOP
+// MESSAGE COMMAND
 // =========================
 
 client.on("messageCreate", async (message) => {
@@ -98,13 +96,12 @@ client.on("interactionCreate", async (interaction) => {
 
   try {
 
-    // ACK interaction trước
-    await interaction.deferReply({
-      flags: 64
-    });
-
     // PUBG
     if (interaction.customId === "pubg") {
+
+      await interaction.deferReply({
+        ephemeral: true
+      });
 
       await interaction.editReply({
         content: "📦 Danh mục PUBG"
@@ -114,6 +111,10 @@ client.on("interactionCreate", async (interaction) => {
 
     // ADMIN
     if (interaction.customId === "admin") {
+
+      await interaction.deferReply({
+        ephemeral: true
+      });
 
       await interaction.editReply({
         content: "🛠️ Khu ADMIN"
@@ -142,7 +143,5 @@ client.login(process.env.TOKEN);
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-
   console.log(`✅ Webhook trực tuyến ${PORT}`);
-
 });
