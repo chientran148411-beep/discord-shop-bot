@@ -33,14 +33,14 @@ module.exports = async (client, interaction) => {
           .setCustomId("create_category")
           .setTitle("Tạo Danh Mục");
 
-        const input = new TextInputBuilder()
+        const categoryInput = new TextInputBuilder()
           .setCustomId("category_name")
           .setLabel("Tên danh mục")
           .setStyle(TextInputStyle.Short)
           .setRequired(true);
 
         const row = new ActionRowBuilder()
-          .addComponents(input);
+          .addComponents(categoryInput);
 
         modal.addComponents(row);
 
@@ -58,25 +58,28 @@ module.exports = async (client, interaction) => {
           .setCustomId("create_product")
           .setTitle("Tạo Sản Phẩm");
 
-        const name = new TextInputBuilder()
+        const productName = new TextInputBuilder()
           .setCustomId("product_name")
           .setLabel("Tên sản phẩm")
-          .setStyle(TextInputStyle.Short);
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
-        const price = new TextInputBuilder()
+        const productPrice = new TextInputBuilder()
           .setCustomId("product_price")
-          .setLabel("Giá")
-          .setStyle(TextInputStyle.Short);
+          .setLabel("Giá sản phẩm")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
-        const desc = new TextInputBuilder()
+        const productDesc = new TextInputBuilder()
           .setCustomId("product_desc")
           .setLabel("Mô tả")
-          .setStyle(TextInputStyle.Paragraph);
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true);
 
         modal.addComponents(
-          new ActionRowBuilder().addComponents(name),
-          new ActionRowBuilder().addComponents(price),
-          new ActionRowBuilder().addComponents(desc)
+          new ActionRowBuilder().addComponents(productName),
+          new ActionRowBuilder().addComponents(productPrice),
+          new ActionRowBuilder().addComponents(productDesc)
         );
 
         return await interaction.showModal(modal);
@@ -111,11 +114,11 @@ module.exports = async (client, interaction) => {
 
         const row = new ActionRowBuilder();
 
-        const list = products.filter(
+        const categoryProducts = products.filter(
           x => x.category === category.name
         );
 
-        list.slice(0, 5).forEach(product => {
+        categoryProducts.slice(0, 5).forEach(product => {
 
           row.addComponents(
 
@@ -128,7 +131,7 @@ module.exports = async (client, interaction) => {
 
         });
 
-        return interaction.reply({
+        return await interaction.reply({
           embeds: [embed],
           components: row.components.length ? [row] : [],
           ephemeral: true
@@ -158,7 +161,7 @@ module.exports = async (client, interaction) => {
         }
 
         const embed = new EmbedBuilder()
-          .setTitle(product.name)
+          .setTitle(`🛒 ${product.name}`)
           .addFields(
             {
               name: "💵 Giá",
@@ -171,7 +174,7 @@ module.exports = async (client, interaction) => {
           )
           .setColor("Green");
 
-        return interaction.reply({
+        return await interaction.reply({
           embeds: [embed],
           ephemeral: true
         });
@@ -248,17 +251,21 @@ module.exports = async (client, interaction) => {
 
   } catch (err) {
 
-    console.log("INTERACTION ERROR:");
+    console.log("❌ INTERACTION ERROR:");
     console.log(err);
 
-    if (!interaction.replied) {
+    try {
 
-      return interaction.reply({
-        content: "❌ Bot đang lỗi",
-        ephemeral: true
-      });
+      if (!interaction.replied) {
 
-    }
+        await interaction.reply({
+          content: "❌ Bot đang lỗi",
+          ephemeral: true
+        });
+
+      }
+
+    } catch {}
 
   }
 
