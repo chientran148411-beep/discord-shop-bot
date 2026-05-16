@@ -15,8 +15,11 @@ mongoose.model(
     price: Number,
 
     status: {
+
       type: String,
+
       default: "pending"
+
     }
 
   })
