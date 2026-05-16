@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
 });
 
 // ======================
-// DISCORD CLIENT
+// CLIENT
 // ======================
 
 const client = new Client({
@@ -50,7 +50,7 @@ const products = [];
 
 client.once("clientReady", () => {
 
-  console.log(`✅ ${client.user.tag} đang trực tuyến`);
+  console.log(`✅ ${client.user.tag} online`);
 
 });
 
@@ -70,16 +70,12 @@ client.on("messageCreate", async (message) => {
 
     const embed = new EmbedBuilder()
       .setTitle("🛒 KENIOS SHOP")
-      .setDescription(
-        "📂 Chọn danh mục hoặc thêm mới bên dưới"
-      )
+      .setDescription("📂 Chọn danh mục hoặc thêm mới bên dưới")
       .setColor("Blue");
 
     const row = new ActionRowBuilder();
 
-    // ======================
     // DANH MỤC
-    // ======================
 
     categories.slice(0, 3).forEach((cat) => {
 
@@ -94,9 +90,7 @@ client.on("messageCreate", async (message) => {
 
     });
 
-    // ======================
     // NÚT THÊM
-    // ======================
 
     row.addComponents(
 
@@ -127,260 +121,241 @@ client.on("messageCreate", async (message) => {
 
 client.on("interactionCreate", async (interaction) => {
 
-  // ======================
-  // BUTTON
-  // ======================
-
-  if (interaction.isButton()) {
+  try {
 
     // ======================
-    // THÊM DANH MỤC
+    // BUTTON
     // ======================
 
-    if (interaction.customId === "add_category") {
+    if (interaction.isButton()) {
 
-      const modal = new ModalBuilder()
-        .setCustomId("create_category")
-        .setTitle("Tạo Danh Mục");
+      // ======================
+      // THÊM DANH MỤC
+      // ======================
 
-      const nameInput = new TextInputBuilder()
-        .setCustomId("category_name")
-        .setLabel("Tên danh mục")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+      if (interaction.customId === "add_category") {
 
-      const descInput = new TextInputBuilder()
-        .setCustomId("category_desc")
-        .setLabel("Mô tả")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+        const modal = new ModalBuilder()
+          .setCustomId("create_category")
+          .setTitle("Tạo Danh Mục");
 
-      const row1 =
-        new ActionRowBuilder().addComponents(nameInput);
+        const input = new TextInputBuilder()
+          .setCustomId("category_name")
+          .setLabel("Tên danh mục")
+          .setStyle(TextInputStyle.Short);
 
-      const row2 =
-        new ActionRowBuilder().addComponents(descInput);
+        const row = new ActionRowBuilder()
+          .addComponents(input);
 
-      modal.addComponents(row1, row2);
+        modal.addComponents(row);
 
-      await interaction.showModal(modal);
+        await interaction.showModal(modal);
 
-      return;
+        return;
+      }
 
-    }
+      // ======================
+      // THÊM SẢN PHẨM
+      // ======================
 
-    // ======================
-    // THÊM SẢN PHẨM
-    // ======================
+      if (interaction.customId === "add_product") {
 
-    if (interaction.customId === "add_product") {
+        const modal = new ModalBuilder()
+          .setCustomId("create_product")
+          .setTitle("Tạo Sản Phẩm");
 
-      const modal = new ModalBuilder()
-        .setCustomId("create_product")
-        .setTitle("Tạo Sản Phẩm");
+        const name = new TextInputBuilder()
+          .setCustomId("product_name")
+          .setLabel("Tên sản phẩm")
+          .setStyle(TextInputStyle.Short);
 
-      const nameInput = new TextInputBuilder()
-        .setCustomId("product_name")
-        .setLabel("Tên sản phẩm")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+        const price = new TextInputBuilder()
+          .setCustomId("product_price")
+          .setLabel("Giá")
+          .setStyle(TextInputStyle.Short);
 
-      const priceInput = new TextInputBuilder()
-        .setCustomId("product_price")
-        .setLabel("Giá")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+        const desc = new TextInputBuilder()
+          .setCustomId("product_desc")
+          .setLabel("Mô tả")
+          .setStyle(TextInputStyle.Paragraph);
 
-      const descInput = new TextInputBuilder()
-        .setCustomId("product_desc")
-        .setLabel("Mô tả")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(name),
+          new ActionRowBuilder().addComponents(price),
+          new ActionRowBuilder().addComponents(desc)
+        );
 
-      const row1 =
-        new ActionRowBuilder().addComponents(nameInput);
+        await interaction.showModal(modal);
 
-      const row2 =
-        new ActionRowBuilder().addComponents(priceInput);
+        return;
+      }
 
-      const row3 =
-        new ActionRowBuilder().addComponents(descInput);
+      // ======================
+      // MỞ DANH MỤC
+      // ======================
 
-      modal.addComponents(row1, row2, row3);
+      if (interaction.customId.startsWith("category_")) {
 
-      await interaction.showModal(modal);
+        const id = interaction.customId.replace("category_", "");
 
-      return;
+        const category = categories.find(x => x.id === id);
 
-    }
+        if (!category) {
 
-    // ======================
-    // MỞ DANH MỤC
-    // ======================
+          return interaction.reply({
+            content: "❌ Không tìm thấy danh mục",
+            ephemeral: true
+          });
 
-    if (interaction.customId.startsWith("category_")) {
+        }
 
-      const id =
-        interaction.customId.replace("category_", "");
+        const embed = new EmbedBuilder()
+          .setTitle(`📂 ${category.name}`)
+          .setDescription(category.desc)
+          .setColor("Blue");
 
-      const category =
-        categories.find(x => x.id === id);
+        const row = new ActionRowBuilder();
 
-      if (!category) return;
+        const categoryProducts = products.filter(
+          x => x.category === category.name
+        );
 
-      const embed = new EmbedBuilder()
-        .setTitle(`📂 ${category.name}`)
-        .setDescription(category.desc)
-        .setColor("Blue");
-
-      const row = new ActionRowBuilder();
-
-      const categoryProducts =
-        products.filter(x => x.category === category.name);
-
-      if (categoryProducts.length === 0) {
-
-        embed.addFields({
-          name: "❌ Trống",
-          value: "Chưa có sản phẩm"
-        });
-
-      } else {
-
-        categoryProducts.slice(0, 5).forEach((product) => {
+        categoryProducts.forEach((p) => {
 
           row.addComponents(
 
             new ButtonBuilder()
-              .setCustomId(`product_${product.id}`)
-              .setLabel(product.name)
+              .setCustomId(`product_${p.id}`)
+              .setLabel(p.name)
               .setStyle(ButtonStyle.Secondary)
 
           );
 
         });
 
+        await interaction.reply({
+          embeds: [embed],
+          components: row.components.length ? [row] : [],
+          ephemeral: true
+        });
+
+        return;
       }
 
-      await interaction.reply({
-        embeds: [embed],
-        components: row.components.length ? [row] : [],
-        ephemeral: true
-      });
+      // ======================
+      // MỞ SẢN PHẨM
+      // ======================
 
-      return;
+      if (interaction.customId.startsWith("product_")) {
+
+        const id = interaction.customId.replace("product_", "");
+
+        const product = products.find(x => x.id === id);
+
+        if (!product) {
+
+          return interaction.reply({
+            content: "❌ Không tìm thấy sản phẩm",
+            ephemeral: true
+          });
+
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle(product.name)
+          .addFields(
+            {
+              name: "💰 Giá",
+              value: product.price
+            },
+            {
+              name: "📝 Mô tả",
+              value: product.desc
+            }
+          )
+          .setColor("Green");
+
+        await interaction.reply({
+          embeds: [embed],
+          ephemeral: true
+        });
+
+      }
 
     }
 
     // ======================
-    // MỞ SẢN PHẨM
+    // MODAL SUBMIT
     // ======================
 
-    if (interaction.customId.startsWith("product_")) {
+    if (interaction.isModalSubmit()) {
 
-      const id =
-        interaction.customId.replace("product_", "");
+      // ======================
+      // TẠO DANH MỤC
+      // ======================
 
-      const product =
-        products.find(x => x.id === id);
+      if (interaction.customId === "create_category") {
 
-      if (!product) return;
+        const name =
+          interaction.fields.getTextInputValue("category_name");
 
-      const embed = new EmbedBuilder()
-        .setTitle(`🛒 ${product.name}`)
-        .addFields(
-          {
-            name: "💰 Giá",
-            value: product.price
-          },
-          {
-            name: "📝 Mô tả",
-            value: product.desc
-          }
-        )
-        .setColor("Green");
+        categories.push({
+          id: Date.now().toString(),
+          name,
+          desc: "Danh mục mới"
+        });
 
-      await interaction.reply({
-        embeds: [embed],
-        ephemeral: true
-      });
+        await interaction.reply({
+          content: `✅ Đã tạo danh mục ${name}`,
+          ephemeral: true
+        });
+
+        return;
+      }
+
+      // ======================
+      // TẠO SẢN PHẨM
+      // ======================
+
+      if (interaction.customId === "create_product") {
+
+        const name =
+          interaction.fields.getTextInputValue("product_name");
+
+        const price =
+          interaction.fields.getTextInputValue("product_price");
+
+        const desc =
+          interaction.fields.getTextInputValue("product_desc");
+
+        let categoryName = "Chưa phân loại";
+
+        if (categories.length > 0) {
+          categoryName = categories[0].name;
+        }
+
+        products.push({
+          id: Date.now().toString(),
+          name,
+          price,
+          desc,
+          category: categoryName
+        });
+
+        await interaction.reply({
+          content: `✅ Đã tạo sản phẩm ${name}`,
+          ephemeral: true
+        });
+
+      }
 
     }
 
   }
 
-  // ======================
-  // MODAL SUBMIT
-  // ======================
+  catch (err) {
 
-  if (interaction.isModalSubmit()) {
-
-    // ======================
-    // TẠO DANH MỤC
-    // ======================
-
-    if (interaction.customId === "create_category") {
-
-      const name =
-        interaction.fields.getTextInputValue("category_name");
-
-      const desc =
-        interaction.fields.getTextInputValue("category_desc");
-
-      categories.push({
-        id: Date.now().toString(),
-        name,
-        desc
-      });
-
-      await interaction.reply({
-        content:
-          `✅ Đã tạo danh mục: ${name}\n\n🔄 Gõ lại !shop để cập nhật`,
-        ephemeral: true
-      });
-
-      return;
-
-    }
-
-    // ======================
-    // TẠO SẢN PHẨM
-    // ======================
-
-    if (interaction.customId === "create_product") {
-
-      const name =
-        interaction.fields.getTextInputValue("product_name");
-
-      const price =
-        interaction.fields.getTextInputValue("product_price");
-
-      const desc =
-        interaction.fields.getTextInputValue("product_desc");
-
-      // TỰ GÁN VÀO DANH MỤC ĐẦU TIÊN
-
-      let categoryName = "Chưa phân loại";
-
-      if (categories.length > 0) {
-        categoryName = categories[0].name;
-      }
-
-      products.push({
-        id: Date.now().toString(),
-        name,
-        price,
-        desc,
-        category: categoryName
-      });
-
-      await interaction.reply({
-        content:
-          `✅ Đã thêm sản phẩm: ${name}\n📂 Danh mục: ${categoryName}`,
-        ephemeral: true
-      });
-
-    }
+    console.log("INTERACTION ERROR:", err);
 
   }
 
@@ -400,6 +375,6 @@ const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
 
-  console.log(`✅ Webhook trực tuyến ${PORT}`);
+  console.log(`✅ Web online ${PORT}`);
 
 });
