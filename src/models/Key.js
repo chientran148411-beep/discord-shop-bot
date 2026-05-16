@@ -1,12 +1,16 @@
-const mongoose =
-require("mongoose");
+const mongoose = require("mongoose");
 
 const schema =
 new mongoose.Schema({
 
 product: String,
 
-key: String
+key: String,
+
+used: {
+type: Boolean,
+default: false
+}
 
 });
 
