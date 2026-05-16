@@ -1,7 +1,6 @@
 {
-  "name": "kenios-shop-bot",
+  "name": "discord-shop-bot",
   "version": "1.0.0",
-  "description": "KENIOS SHOP BOT",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
