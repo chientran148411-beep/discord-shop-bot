@@ -1,12 +1,18 @@
-const mongoose =
-require("mongoose");
+const mongoose = require("mongoose");
 
 const schema =
 new mongoose.Schema({
 
 userId: String,
 
-purchases: Array
+products: [
+String
+],
+
+totalSpent: {
+type: Number,
+default: 0
+}
 
 });
 
