@@ -11,39 +11,10 @@ require("mongoose");
 
 
 
-// MODELS
-
-require("./models/Category");
-require("./models/Product");
-require("./models/Key");
-require("./models/User");
-require("./models/Order");
-
-
-
-// PANELS
-
-const shopPanel =
-require("./panels/shopPanel");
-
-const adminPanel =
-require("./panels/adminPanel");
-
-
-
-// HANDLERS
-
-const buttonHandler =
-require("./handlers/buttons");
-
-const modalHandler =
-require("./handlers/modals");
-
-
-
 // CLIENT
 
-const client = new Client({
+const client =
+new Client({
 
   intents: [
     GatewayIntentBits.Guilds
@@ -53,7 +24,7 @@ const client = new Client({
 
 
 
-// MONGODB
+// DATABASE
 
 mongoose.connect(
   process.env.MONGO_URI
@@ -71,9 +42,40 @@ mongoose.connect(
 
 
 
+// MODELS
+
+require("./models/Product");
+require("./models/Category");
+require("./models/Key");
+require("./models/Order");
+require("./models/User");
+
+
+
+// HANDLERS
+
+const buttonHandler =
+require("./handlers/buttons");
+
+const modalHandler =
+require("./handlers/modals");
+
+
+
+// PANELS
+
+const shopPanel =
+require("./panels/shopPanel");
+
+const adminPanel =
+require("./panels/adminPanel");
+
+
+
 // READY
 
 client.once(
+
   Events.ClientReady,
 
   async () => {
@@ -96,6 +98,8 @@ client.once(
       return;
 
     }
+
+    // SLASH COMMANDS
 
     await guild.commands.set([
 
@@ -139,9 +143,9 @@ client.on(
 
     try {
 
-      // =====================
-      // CHAT COMMANDS
-      // =====================
+      // ===================
+      // SLASH COMMAND
+      // ===================
 
       if (
         interaction.isChatInputCommand()
@@ -175,11 +179,9 @@ client.on(
 
       }
 
-
-
-      // =====================
-      // BUTTONS
-      // =====================
+      // ===================
+      // BUTTON
+      // ===================
 
       if (
         interaction.isButton()
@@ -191,11 +193,9 @@ client.on(
 
       }
 
-
-
-      // =====================
-      // MODALS
-      // =====================
+      // ===================
+      // MODAL
+      // ===================
 
       if (
         interaction.isModalSubmit()
