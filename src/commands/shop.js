@@ -6,6 +6,8 @@ const {
   ButtonStyle
 } = require("discord.js");
 
+const Category = require("../models/Category");
+
 module.exports = {
 
   data: new SlashCommandBuilder()
@@ -14,44 +16,81 @@ module.exports = {
 
   async execute(interaction) {
 
-    const embed = new EmbedBuilder()
+    // =========================
+    // GET CATEGORIES
+    // =========================
+
+    const categories =
+      await Category.find();
+
+    if (!categories.length) {
+
+      return interaction.reply({
+
+        content:
+        "❌ Chưa có danh mục",
+
+        ephemeral: true
+
+      });
+
+    }
+
+    // =========================
+    // EMBED
+    // =========================
+
+    const embed =
+      new EmbedBuilder()
 
       .setColor("#5865F2")
 
-      .setTitle("🛒 KENIOS SHOP")
+      .setTitle(
+        "🛒 KENIOS SHOP"
+      )
 
       .setDescription(
 
 `✨ Chào mừng đến shop tự động
 
-📂 Chọn danh mục bên dưới
-
-• Free Fire
-• Roblox
-• Liên Quân`
+📂 Chọn danh mục bên dưới`
 
       );
 
-    const row = new ActionRowBuilder()
+    // =========================
+    // BUTTONS
+    // =========================
 
-      .addComponents(
+    const row =
+      new ActionRowBuilder();
 
-        new ButtonBuilder()
-          .setCustomId("shop_ff")
-          .setLabel("Free Fire")
-          .setStyle(ButtonStyle.Primary),
+    categories
+      .slice(0, 5)
+      .forEach(category => {
 
-        new ButtonBuilder()
-          .setCustomId("shop_roblox")
-          .setLabel("Roblox")
-          .setStyle(ButtonStyle.Success),
+        row.addComponents(
 
-        new ButtonBuilder()
-          .setCustomId("shop_lq")
-          .setLabel("Liên Quân")
-          .setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder()
 
-      );
+          .setCustomId(
+            `category_${category.name}`
+          )
+
+          .setLabel(
+            category.name
+          )
+
+          .setStyle(
+            ButtonStyle.Primary
+          )
+
+        );
+
+      });
+
+    // =========================
+    // SEND
+    // =========================
 
     await interaction.reply({
 
