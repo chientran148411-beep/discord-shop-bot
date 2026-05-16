@@ -1,75 +1,174 @@
 require("dotenv").config();
 
 const fs = require("fs");
-
 const path = require("path");
 
 const {
-Client,
-GatewayIntentBits,
-Collection
+  Client,
+  Collection,
+  GatewayIntentBits
 } = require("discord.js");
 
-const client =
-new Client({
+const mongoose = require("mongoose");
 
-intents: [
-
-GatewayIntentBits.Guilds
-
-]
-
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds
+  ]
 });
 
-client.commands =
-new Collection();
+client.commands = new Collection();
 
-// DATABASE
 
-require("./config/database")();
 
+// =========================
 // LOAD COMMANDS
+// =========================
 
-const commandFiles =
-fs.readdirSync(
-"./src/commands"
-)
-
-.filter(file =>
-file.endsWith(".js")
+const commandsPath = path.join(
+  __dirname,
+  "commands"
 );
+
+const commandFiles = fs
+  .readdirSync(commandsPath)
+  .filter(file => file.endsWith(".js"));
 
 for (const file of commandFiles) {
 
-const command =
-require(`./commands/${file}`);
+  const command = require(
+    path.join(commandsPath, file)
+  );
 
-client.commands.set(
-command.data.name,
-command
-);
-
-}
-
-// EVENTS
-
-require("./handlers/interactionCreate")(client);
-
-require("./handlers/modalHandler")(client);
-
-require("./handlers/adminPanel")(client);
-
-client.once(
-"ready",
-() => {
-
-console.log(
-`✅ ${client.user.tag} online`
-);
+  client.commands.set(
+    command.data.name,
+    command
+  );
 
 }
+
+console.log("✅ Đã tải commands");
+
+
+
+// =========================
+// LOAD INTERACTION HANDLER
+// =========================
+
+const interactionHandler = require(
+  "./handlers/interactionCreate"
 );
+
+client.on(
+  "interactionCreate",
+  interactionHandler
+);
+
+
+
+// =========================
+// READY
+// =========================
+
+client.once("ready", () => {
+
+  console.log(
+    `✅ ${client.user.tag} online`
+  );
+
+});
+
+
+
+// =========================
+// MONGODB
+// =========================
+
+mongoose.connect(
+  process.env.MONGO_URI
+)
+
+.then(() => {
+
+  console.log(
+    "✅ Đã kết nối MongoDB"
+  );
+
+})
+
+.catch(err => {
+
+  console.log(err);
+
+});
+
+
+
+// =========================
+// SLASH COMMANDS
+// =========================
+
+client.on(
+  "interactionCreate",
+  async interaction => {
+
+    if (
+      !interaction.isChatInputCommand()
+    ) return;
+
+    const command =
+      client.commands.get(
+        interaction.commandName
+      );
+
+    if (!command) return;
+
+    try {
+
+      await command.execute(
+        interaction,
+        client
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+      if (interaction.replied) {
+
+        await interaction.followUp({
+
+          content:
+          "❌ Có lỗi xảy ra",
+
+          ephemeral: true
+
+        });
+
+      } else {
+
+        await interaction.reply({
+
+          content:
+          "❌ Có lỗi xảy ra",
+
+          ephemeral: true
+
+        });
+
+      }
+
+    }
+
+  }
+);
+
+
+
+// =========================
+// LOGIN
+// =========================
 
 client.login(
-process.env.TOKEN
+  process.env.TOKEN
 );
