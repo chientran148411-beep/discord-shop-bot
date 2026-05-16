@@ -15,9 +15,9 @@ const {
   TextInputStyle
 } = require("discord.js");
 
-// ======================
+// =====================
 // EXPRESS
-// ======================
+// =====================
 
 app.use(express.json());
 
@@ -25,9 +25,9 @@ app.get("/", (req, res) => {
   res.send("KENIOS SHOP ONLINE");
 });
 
-// ======================
+// =====================
 // CLIENT
-// ======================
+// =====================
 
 const client = new Client({
   intents: [
@@ -37,45 +37,41 @@ const client = new Client({
   ]
 });
 
-// ======================
+// =====================
 // DATABASE TẠM
-// ======================
+// =====================
 
 const categories = [];
 const products = [];
 
-// ======================
+// =====================
 // READY
-// ======================
+// =====================
 
 client.once("clientReady", () => {
 
-  console.log(`✅ ${client.user.tag} online`);
+  console.log(`✅ ${client.user.tag} ONLINE`);
 
 });
 
-// ======================
-// COMMANDS
-// ======================
+// =====================
+// COMMAND
+// =====================
 
 client.on("messageCreate", async (message) => {
 
   if (message.author.bot) return;
 
-  // ======================
-  // !SHOP
-  // ======================
-
   if (message.content === "!shop") {
 
     const embed = new EmbedBuilder()
       .setTitle("🛒 KENIOS SHOP")
-      .setDescription("📂 Chọn danh mục hoặc thêm mới bên dưới")
+      .setDescription("✨ Shop tự động\n\n📂 Chọn danh mục bên dưới")
       .setColor("Blue");
 
     const row = new ActionRowBuilder();
 
-    // DANH MỤC
+    // CATEGORY BUTTONS
 
     categories.slice(0, 3).forEach((cat) => {
 
@@ -90,7 +86,7 @@ client.on("messageCreate", async (message) => {
 
     });
 
-    // NÚT THÊM
+    // ADMIN BUTTONS
 
     row.addComponents(
 
@@ -115,23 +111,23 @@ client.on("messageCreate", async (message) => {
 
 });
 
-// ======================
+// =====================
 // INTERACTION
-// ======================
+// =====================
 
 client.on("interactionCreate", async (interaction) => {
 
   try {
 
-    // ======================
+    // =====================
     // BUTTON
-    // ======================
+    // =====================
 
     if (interaction.isButton()) {
 
-      // ======================
-      // THÊM DANH MỤC
-      // ======================
+      // =====================
+      // ADD CATEGORY
+      // =====================
 
       if (interaction.customId === "add_category") {
 
@@ -144,19 +140,18 @@ client.on("interactionCreate", async (interaction) => {
           .setLabel("Tên danh mục")
           .setStyle(TextInputStyle.Short);
 
-        const row = new ActionRowBuilder()
-          .addComponents(input);
-
-        modal.addComponents(row);
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(input)
+        );
 
         await interaction.showModal(modal);
 
         return;
       }
 
-      // ======================
-      // THÊM SẢN PHẨM
-      // ======================
+      // =====================
+      // ADD PRODUCT
+      // =====================
 
       if (interaction.customId === "add_product") {
 
@@ -190,15 +185,17 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // ======================
-      // MỞ DANH MỤC
-      // ======================
+      // =====================
+      // OPEN CATEGORY
+      // =====================
 
       if (interaction.customId.startsWith("category_")) {
 
         const id = interaction.customId.replace("category_", "");
 
-        const category = categories.find(x => x.id === id);
+        const category = categories.find(
+          x => x.id === id
+        );
 
         if (!category) {
 
@@ -242,15 +239,17 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // ======================
-      // MỞ SẢN PHẨM
-      // ======================
+      // =====================
+      // OPEN PRODUCT
+      // =====================
 
       if (interaction.customId.startsWith("product_")) {
 
         const id = interaction.customId.replace("product_", "");
 
-        const product = products.find(x => x.id === id);
+        const product = products.find(
+          x => x.id === id
+        );
 
         if (!product) {
 
@@ -284,20 +283,22 @@ client.on("interactionCreate", async (interaction) => {
 
     }
 
-    // ======================
+    // =====================
     // MODAL SUBMIT
-    // ======================
+    // =====================
 
     if (interaction.isModalSubmit()) {
 
-      // ======================
-      // TẠO DANH MỤC
-      // ======================
+      // =====================
+      // CREATE CATEGORY
+      // =====================
 
       if (interaction.customId === "create_category") {
 
         const name =
-          interaction.fields.getTextInputValue("category_name");
+          interaction.fields.getTextInputValue(
+            "category_name"
+          );
 
         categories.push({
           id: Date.now().toString(),
@@ -313,20 +314,26 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
-      // ======================
-      // TẠO SẢN PHẨM
-      // ======================
+      // =====================
+      // CREATE PRODUCT
+      // =====================
 
       if (interaction.customId === "create_product") {
 
         const name =
-          interaction.fields.getTextInputValue("product_name");
+          interaction.fields.getTextInputValue(
+            "product_name"
+          );
 
         const price =
-          interaction.fields.getTextInputValue("product_price");
+          interaction.fields.getTextInputValue(
+            "product_price"
+          );
 
         const desc =
-          interaction.fields.getTextInputValue("product_desc");
+          interaction.fields.getTextInputValue(
+            "product_desc"
+          );
 
         let categoryName = "Chưa phân loại";
 
@@ -355,26 +362,26 @@ client.on("interactionCreate", async (interaction) => {
 
   catch (err) {
 
-    console.log("INTERACTION ERROR:", err);
+    console.log("ERROR:", err);
 
   }
 
 });
 
-// ======================
+// =====================
 // LOGIN
-// ======================
+// =====================
 
 client.login(process.env.TOKEN);
 
-// ======================
+// =====================
 // PORT
-// ======================
+// =====================
 
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
 
-  console.log(`✅ Web online ${PORT}`);
+  console.log(`✅ WEB ONLINE ${PORT}`);
 
 });
